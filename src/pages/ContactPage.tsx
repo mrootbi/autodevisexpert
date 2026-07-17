@@ -1,21 +1,40 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, MapPin, Send, CheckCircle2, MessageSquare, Clock } from 'lucide-react';
+import { Mail, MapPin, Send, CheckCircle2, MessageSquare, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import SEO from '../components/SEO';
+import { submitContactMessage } from '../lib/contactSubmit';
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  /** Honeypot — leave empty; bots often fill it. */
+  const [website, setWebsite] = useState('');
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Pas de SMTP configuré : confirmation locale uniquement.
-    setSent(true);
-    setName('');
-    setEmail('');
-    setMessage('');
+    if (sending) return;
+    setError(null);
+    setSending(true);
+    try {
+      const result = await submitContactMessage({ name, email, message, website });
+      if (!result.ok) {
+        setError(result.error || 'Impossible d’envoyer le message. Réessayez.');
+        return;
+      }
+      setSent(true);
+      setName('');
+      setEmail('');
+      setMessage('');
+      setWebsite('');
+    } catch {
+      setError('Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -63,9 +82,10 @@ export default function ContactPage() {
               {sent ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center animate-fadeIn">
                   <CheckCircle2 className="h-12 w-12 text-action-green" />
-                  <h2 className="mt-4 font-display text-xl font-bold text-slate-900">Message enregistré</h2>
+                  <h2 className="mt-4 font-display text-xl font-bold text-slate-900">Message envoyé</h2>
                   <p className="mt-1 max-w-md text-slate-500">
-                    Merci. Nous reviendrons vers vous à l&apos;adresse indiquée dans les meilleurs délais.
+                    Merci. Nous avons bien reçu votre message et reviendrons vers vous à l&apos;adresse
+                    indiquée dans les meilleurs délais.
                   </p>
                   <button type="button" className="btn-ghost mt-6" onClick={() => setSent(false)}>
                     Envoyer un autre message
@@ -73,6 +93,18 @@ export default function ContactPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {/* Honeypot — visually hidden from humans */}
+                  <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
+                    <label htmlFor="contact-website">Site web</label>
+                    <input
+                      id="contact-website"
+                      name="website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                    />
+                  </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="label-field" htmlFor="contact-name">
@@ -84,6 +116,9 @@ export default function ContactPage() {
                         name="name"
                         autoComplete="name"
                         required
+                        minLength={2}
+                        maxLength={120}
+                        disabled={sending}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Votre nom"
@@ -100,6 +135,8 @@ export default function ContactPage() {
                         type="email"
                         autoComplete="email"
                         required
+                        maxLength={254}
+                        disabled={sending}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="vous@email.fr"
@@ -115,20 +152,41 @@ export default function ContactPage() {
                       className="input-field min-h-[160px] resize-y"
                       name="message"
                       required
+                      minLength={10}
+                      maxLength={5000}
+                      disabled={sending}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       placeholder="Décrivez votre demande…"
                     />
                   </div>
-                  <button type="submit" className="btn-green w-full sm:w-auto">
-                    <Send className="h-4 w-4" /> Envoyer le message
+                  {error && (
+                    <div
+                      className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                      role="alert"
+                    >
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                      <p>{error}</p>
+                    </div>
+                  )}
+                  <button type="submit" className="btn-green w-full sm:w-auto" disabled={sending}>
+                    {sending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> Envoi en cours…
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4" /> Envoyer le message
+                      </>
+                    )}
                   </button>
                   <p className="text-xs text-slate-400">
                     Vos données sont traitées uniquement pour répondre à votre demande, conformément à notre{' '}
                     <Link to="/politique-de-confidentialite" className="text-trust-700 underline">
                       Politique de Confidentialité
                     </Link>
-                    . Aucune revente à des tiers.
+                    . Aucune revente à des tiers. Destination :{' '}
+                    <span className="text-slate-500">contact@autodevisexpert.com</span>.
                   </p>
                 </div>
               )}
