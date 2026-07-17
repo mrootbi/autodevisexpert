@@ -13,8 +13,9 @@ function isValidArticleList(value: unknown): value is BlogArticle[] {
 
 /** Reactive hook: returns the current blog articles and re-renders when the CMS updates them. */
 export function useBlogArticles(): [BlogArticle[], boolean] {
-  const [articles, setArticles] = useState<BlogArticle[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Seed synchronously so the first paint already has titles/H1 (SEO auditors & crawlers).
+  const [articles, setArticles] = useState<BlogArticle[]>(() => getBlogArticles());
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -36,6 +37,8 @@ export function useBlogArticles(): [BlogArticle[], boolean] {
         setArticles(remote);
       } catch {
         /* keep local */
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
 

@@ -16,6 +16,22 @@ const SITE = 'AutoDevis Expert';
 const DEFAULT_DESC =
   "Analysez votre devis garagiste, comparez le prix réel et obtenez l'avis d'un expert mécanicien. Évitez les marges gonflées et les pièces surfacturées.";
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-default.png`;
+/** Google typically truncates meta descriptions around 150–160 characters. */
+const META_DESC_MAX = 155;
+
+/** Truncate for SERP snippets — prefers a word boundary, ends with an ellipsis when cut. */
+export function truncateMetaDescription(text: string, max = META_DESC_MAX): string {
+  const cleaned = text.replace(/\s+/g, ' ').trim();
+  if (cleaned.length <= max) return cleaned;
+  const budget = Math.max(40, max - 1);
+  const cut = cleaned.slice(0, budget);
+  const lastSpace = cut.lastIndexOf(' ');
+  const base = (lastSpace > Math.floor(budget * 0.55) ? cut.slice(0, lastSpace) : cut).replace(
+    /[.,;:!?\-–—…]+$/u,
+    '',
+  );
+  return `${base}…`;
+}
 
 function setMeta(attr: 'name' | 'property', key: string, content: string) {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
@@ -51,6 +67,7 @@ export default function SEO({
   jsonLd,
 }: SEOProps) {
   const fullTitle = buildFullTitle(title);
+  const metaDescription = truncateMetaDescription(description);
   const canonical = `${BASE_URL}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`;
   const imageUrl = resolveImageUrl(image);
   const seoKey = canonicalPath;
@@ -58,20 +75,20 @@ export default function SEO({
 
   useEffect(() => {
     document.title = fullTitle;
-    setMeta('name', 'description', description);
+    setMeta('name', 'description', metaDescription);
     setMeta('name', 'robots', robots);
 
     setMeta('property', 'og:type', 'website');
     setMeta('property', 'og:locale', 'fr_FR');
     setMeta('property', 'og:site_name', SITE);
     setMeta('property', 'og:title', fullTitle);
-    setMeta('property', 'og:description', description);
+    setMeta('property', 'og:description', metaDescription);
     setMeta('property', 'og:url', canonical);
     setMeta('property', 'og:image', imageUrl);
 
     setMeta('name', 'twitter:card', 'summary_large_image');
     setMeta('name', 'twitter:title', fullTitle);
-    setMeta('name', 'twitter:description', description);
+    setMeta('name', 'twitter:description', metaDescription);
     setMeta('name', 'twitter:image', imageUrl);
 
     let link = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
@@ -94,9 +111,9 @@ export default function SEO({
       if (ldEl && ldEl.parentNode) ldEl.parentNode.removeChild(ldEl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fullTitle, description, canonical, imageUrl, robots, seoKey, JSON.stringify(jsonLd)]);
+  }, [fullTitle, metaDescription, canonical, imageUrl, robots, seoKey, JSON.stringify(jsonLd)]);
 
   return null;
 }
 
-export { DEFAULT_DESC, DEFAULT_OG_IMAGE, SITE as SITE_NAME };
+export { DEFAULT_DESC, DEFAULT_OG_IMAGE, SITE as SITE_NAME, META_DESC_MAX };

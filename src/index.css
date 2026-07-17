@@ -46,11 +46,14 @@
   .prose-article p {
     @apply mb-4 text-slate-700 leading-relaxed;
   }
+  .prose-article h1 {
+    @apply mt-10 mb-3 text-3xl font-extrabold text-slate-900;
+  }
   .prose-article h2 {
-    @apply mt-10 mb-3 text-2xl font-bold text-slate-900;
+    @apply mt-10 mb-3 font-display text-2xl font-bold text-slate-900;
   }
   .prose-article h3 {
-    @apply mt-6 mb-2 text-xl font-semibold text-slate-900;
+    @apply mt-6 mb-2 font-display text-xl font-semibold text-slate-900;
   }
   .prose-article ul,
   .prose-article ol {

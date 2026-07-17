@@ -39,6 +39,18 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Crawlable fallback when JS is disabled / before hydration -->
+    <noscript>
+      <nav aria-label="Navigation">
+        <a href="/">Accueil</a> —
+        <a href="/blog">Blog</a> —
+        <a href="/contact">Contact</a> —
+        <a href="/#outil">Analyser un devis</a>
+      </nav>
+      <h1>AutoDevis Expert — Comparateur de devis garagiste</h1>
+      <h2>Analysez votre devis auto et évitez les marges gonflées</h2>
+      <p>Activez JavaScript pour utiliser le comparateur et lire les articles complets.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

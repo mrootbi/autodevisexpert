@@ -15,6 +15,8 @@ export function sanitizeUserText(input: string, maxLen = MAX_USER_TEXT_CHARS): s
 export function sanitizeHtml(dirty: string): string {
   return DOMPurify.sanitize(dirty, {
     USE_PROFILES: { html: true },
+    // Keep semantic headings for SEO — never strip h1–h6 from CMS HTML.
+    ADD_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
     FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'link', 'meta', 'base'],
     FORBID_ATTR: ['style', 'onerror', 'onclick', 'onload', 'onmouseover', 'onfocus', 'onblur'],
     ALLOW_DATA_ATTR: false,
