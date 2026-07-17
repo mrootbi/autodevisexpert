@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SettingsProvider } from './lib/settingsContext';
 import Layout from './components/Layout';
+import GoogleAnalytics from './components/GoogleAnalytics';
 
 /** Lightweight pages stay eager for instant first paint. */
 import HomePage from './pages/HomePage';
@@ -31,6 +32,7 @@ export default function App() {
   return (
     <SettingsProvider>
       <BrowserRouter>
+        <GoogleAnalytics />
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/sitemap.xml" element={<SitemapPage />} />

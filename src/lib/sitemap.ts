@@ -65,7 +65,7 @@ export function buildSitemapXml(
       ),
     ),
     ...articles
-      .filter((a) => a.slug)
+      .filter((a) => isIndexableBlogSlug(a.slug))
       .map((article) =>
         urlEntry(
           `${root}/blog/${article.slug}`,
@@ -93,8 +93,29 @@ ${entries.join('\n')}
 `;
 }
 
+const JUNK_SLUGS = new Set(['test', 'rfsfsf', 'asdf', 'xxx', 'demo', 'tmp']);
+
+/** Drop dummy / CMS smoke-test posts so they never reach Search Console. */
+export function isIndexableBlogSlug(slug: string): boolean {
+  const cleaned = (slug || '').trim().toLowerCase();
+  if (!cleaned || cleaned.length < 3) return false;
+  if (JUNK_SLUGS.has(cleaned)) return false;
+  if (/^(test|demo|tmp|asdf|xxx|lorem)([-_]|$)/i.test(cleaned)) return false;
+  return true;
+}
+
+export function isIndexableBlogArticle(article: Pick<BlogArticle, 'slug' | 'title'>): boolean {
+  if (!isIndexableBlogSlug(article.slug)) return false;
+  const title = (article.title || '').trim();
+  if (title.length < 8) return false;
+  if (/^(test|rfsfsf|asdf|xxx|demo)$/i.test(title)) return false;
+  return true;
+}
+
 export function articlesToSitemapRefs(articles: BlogArticle[]): SitemapArticleRef[] {
-  return articles.map((a) => ({ slug: a.slug, date: a.date }));
+  return articles
+    .filter(isIndexableBlogArticle)
+    .map((a) => ({ slug: a.slug, date: a.date }));
 }
 
 async function loadBlogRefsFromSupabase(): Promise<SitemapArticleRef[]> {

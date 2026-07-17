@@ -31,6 +31,21 @@ const STATIC_ROUTES = [
   { path: '/cgu', priority: '0.3', changefreq: 'yearly' },
 ];
 
+const JUNK_SLUGS = new Set(['test', 'rfsfsf', 'asdf', 'xxx', 'demo', 'tmp']);
+
+function isIndexableBlogSlug(slug, title = '') {
+  const cleaned = String(slug || '')
+    .trim()
+    .toLowerCase();
+  if (!cleaned || cleaned.length < 3) return false;
+  if (JUNK_SLUGS.has(cleaned)) return false;
+  if (/^(test|demo|tmp|asdf|xxx|lorem)([-_]|$)/i.test(cleaned)) return false;
+  const t = String(title || '').trim();
+  if (t && t.length < 8) return false;
+  if (t && /^(test|rfsfsf|asdf|xxx|demo)$/i.test(t)) return false;
+  return true;
+}
+
 function loadEnvFile() {
   const envPath = join(ROOT, '.env');
   if (!existsSync(envPath)) return;
@@ -85,7 +100,7 @@ async function loadArticlesFromSupabase() {
     const parsed = JSON.parse(rows[0].value);
     if (!Array.isArray(parsed)) return null;
     return parsed
-      .filter((a) => a && typeof a.slug === 'string')
+      .filter((a) => a && typeof a.slug === 'string' && isIndexableBlogSlug(a.slug, a.title))
       .map((a) => ({ slug: a.slug, date: a.date }));
   } catch {
     return null;
