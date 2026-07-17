@@ -4,6 +4,7 @@ import SEO from '../components/SEO';
 import ArticleCover from '../components/ArticleCover';
 import { useBlogArticles } from '../lib/blogStore';
 import NativeAdCard from '../components/NativeAdCard';
+import { SITE_BASE_URL } from '../lib/siteUrl';
 
 export default function BlogPage() {
   const [articles, loading] = useBlogArticles();
@@ -24,15 +25,15 @@ export default function BlogPage() {
           '@type': 'Blog',
           name: 'Blog AutoDevis Expert',
           inLanguage: 'fr-FR',
-          url: 'https://autodevisexpert.com/blog',
-          image: 'https://autodevisexpert.com/og-default.png',
+          url: `${SITE_BASE_URL}/blog`,
+          image: `${SITE_BASE_URL}/og-default.png`,
           blogPost: articles.map((a) => ({
             '@type': 'BlogPosting',
             headline: a.title,
             datePublished: a.date,
             author: { '@type': 'Person', name: a.author },
             description: a.excerpt,
-            url: `https://autodevisexpert.com/blog/${a.slug}`,
+            url: `${SITE_BASE_URL}/blog/${a.slug}`,
           })),
         }}
       />

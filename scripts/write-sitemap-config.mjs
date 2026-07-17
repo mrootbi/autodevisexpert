@@ -35,7 +35,7 @@ const php = `<?php
 return [
   'supabase_url' => ${JSON.stringify(url)},
   'supabase_anon_key' => ${JSON.stringify(key)},
-  'site_base_url' => 'https://autodevisexpert.com',
+  'site_base_url' => 'https://www.autodevisexpert.com',
 ];
 `;
 

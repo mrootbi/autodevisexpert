@@ -9,6 +9,7 @@ import NotFoundPage from './NotFoundPage';
 import { useSettings } from '../lib/settingsContext';
 import { canRenderAdSlot } from '../lib/adsConfig';
 import { sanitizeHtml } from '../lib/sanitize';
+import { SITE_BASE_URL } from '../lib/siteUrl';
 
 export default function ArticlePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -44,8 +45,8 @@ export default function ArticlePage() {
           description: article.excerpt,
           articleSection: article.category,
           inLanguage: 'fr-FR',
-          image: article.coverImage || 'https://autodevisexpert.com/og-default.png',
-          mainEntityOfPage: `https://autodevisexpert.com/blog/${article.slug}`,
+          image: article.coverImage || `${SITE_BASE_URL}/og-default.png`,
+          mainEntityOfPage: `${SITE_BASE_URL}/blog/${article.slug}`,
         }}
       />
       <article>

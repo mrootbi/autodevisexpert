@@ -33,8 +33,8 @@ export default function LegalMentionsPage() {
         </li>
         <li>
           <strong>Site web :</strong>{' '}
-          <a href="https://autodevisexpert.com" className="text-trust-700 underline">
-            https://autodevisexpert.com
+          <a href="https://www.autodevisexpert.com" className="text-trust-700 underline">
+            https://www.autodevisexpert.com
           </a>
         </li>
       </ul>

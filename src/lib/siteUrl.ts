@@ -1,2 +1,2 @@
-/** Canonical public site URL (no trailing slash). */
-export const SITE_BASE_URL = 'https://autodevisexpert.com';
+/** Canonical public site URL (no trailing slash). Must match the live primary host. */
+export const SITE_BASE_URL = 'https://www.autodevisexpert.com';

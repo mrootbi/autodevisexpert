@@ -7,7 +7,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 
-const SITE_BASE_URL = Deno.env.get('SITE_BASE_URL') ?? 'https://autodevisexpert.com';
+const SITE_BASE_URL = Deno.env.get('SITE_BASE_URL') ?? 'https://www.autodevisexpert.com';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 

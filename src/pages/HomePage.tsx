@@ -4,6 +4,7 @@ import SEO from '../components/SEO';
 import NativeAdCard from '../components/NativeAdCard';
 import RecentAnalyses from '../components/RecentAnalyses';
 import { useBlogArticles } from '../lib/blogStore';
+import { SITE_BASE_URL } from '../lib/siteUrl';
 
 /** Devis tool + car DB + markdown — deferred so the hero paints first on mobile. */
 const DevisTool = lazy(() => import('../components/DevisTool'));
@@ -37,8 +38,8 @@ export default function HomePage() {
           applicationCategory: 'BusinessApplication',
           operatingSystem: 'Web',
           inLanguage: 'fr-FR',
-          url: 'https://autodevisexpert.com/',
-          image: 'https://autodevisexpert.com/og-default.png',
+          url: `${SITE_BASE_URL}/`,
+          image: `${SITE_BASE_URL}/og-default.png`,
           offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
           description:
             "Comparateur de devis garagiste indépendant. Analysez votre devis gratuitement, comparez au prix réel et obtenez l'avis d'un expert mécanicien.",

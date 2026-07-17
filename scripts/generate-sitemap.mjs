@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
-const BASE_URL = process.env.SITE_BASE_URL || 'https://autodevisexpert.com';
+const BASE_URL = process.env.SITE_BASE_URL || 'https://www.autodevisexpert.com';
 const OUT = join(ROOT, 'public', 'sitemap.fallback.xml');
 
 const STATIC_ROUTES = [

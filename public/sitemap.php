@@ -17,7 +17,7 @@ $cfg = is_file($configFile) ? require $configFile : [];
 
 $supabaseUrl = rtrim(getenv('SUPABASE_URL') ?: ($cfg['supabase_url'] ?? ''), '/');
 $anonKey = getenv('SUPABASE_ANON_KEY') ?: ($cfg['supabase_anon_key'] ?? '');
-$siteBase = rtrim(getenv('SITE_BASE_URL') ?: ($cfg['site_base_url'] ?? 'https://autodevisexpert.com'), '/');
+$siteBase = rtrim(getenv('SITE_BASE_URL') ?: ($cfg['site_base_url'] ?? 'https://www.autodevisexpert.com'), '/');
 
 function fetch_setting(string $url, string $key, string $anonKey): ?string {
   $endpoint = $url . '/rest/v1/app_settings?key=eq.' . rawurlencode($key) . '&select=value';

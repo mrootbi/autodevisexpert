@@ -1,4 +1,4 @@
-# AutoDevis Expert — https://autodevisexpert.com
+# AutoDevis Expert — https://www.autodevisexpert.com
 User-agent: *
 Allow: /
 
@@ -11,4 +11,4 @@ Disallow: /admin
 Disallow: /admin/
 
 # Sitemap location
-Sitemap: https://autodevisexpert.com/sitemap.xml
+Sitemap: https://www.autodevisexpert.com/sitemap.xml
