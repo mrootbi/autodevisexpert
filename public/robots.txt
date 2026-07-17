@@ -1,0 +1,14 @@
+# AutoDevis Expert — https://autodevisexpert.com
+User-agent: *
+Allow: /
+
+# Protect the admin dashboard from crawlers
+Disallow: /mouadbi
+Disallow: /mouadbi/
+
+# Legacy path (scrubbed) — keep blocked if old links exist
+Disallow: /admin
+Disallow: /admin/
+
+# Sitemap location
+Sitemap: https://autodevisexpert.com/sitemap.xml

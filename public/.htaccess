@@ -1,0 +1,13 @@
+# AutoDevis Expert — Apache / Hostinger
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Dynamic sitemap with real Content-Type: application/xml
+  # (reads Supabase app_settings.sitemap_xml — do NOT ship a static public/sitemap.xml)
+  RewriteRule ^sitemap\.xml$ sitemap.php [L]
+
+  # SPA fallback (existing static assets win first)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>
