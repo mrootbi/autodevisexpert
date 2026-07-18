@@ -15,6 +15,7 @@ import {
   AI_SYSTEM_PROMPT_KEY,
   DEFAULT_AI_SYSTEM_PROMPT,
   cacheAiSystemPromptLocally,
+  invalidateAiSystemPromptCache,
   normalizeAiSystemPrompt,
   readCachedAiSystemPrompt,
 } from './aiPrompt';
@@ -253,22 +254,35 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const setAiSystemPrompt = useCallback(async (prompt: string) => {
     const clean = normalizeAiSystemPrompt(prompt);
-    setLocalAiPrompt(clean);
-    cacheAiSystemPromptLocally(clean);
 
-    const { error } = await supabase.from('app_settings').upsert(
-      {
+    // Prefer UPDATE then INSERT — clearer errors than a silent upsert under RLS.
+    const { data: updated, error: updateError } = await supabase
+      .from('app_settings')
+      .update({ value: clean, updated_at: new Date().toISOString() })
+      .eq('key', AI_SYSTEM_PROMPT_KEY)
+      .select('key');
+
+    if (updateError) {
+      console.warn('Failed to update AI system prompt in Supabase', updateError);
+      throw updateError;
+    }
+
+    if (!updated || updated.length === 0) {
+      const { error: insertError } = await supabase.from('app_settings').insert({
         key: AI_SYSTEM_PROMPT_KEY,
         value: clean,
         updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'key' },
-    );
-
-    if (error) {
-      console.warn('Failed to save AI system prompt to Supabase', error);
-      throw error;
+      });
+      if (insertError) {
+        console.warn('Failed to insert AI system prompt in Supabase', insertError);
+        throw insertError;
+      }
     }
+
+    invalidateAiSystemPromptCache();
+    setLocalAiPrompt(clean);
+    cacheAiSystemPromptLocally(clean);
+    settingsFetchedAt = 0;
   }, []);
 
   const setGeminiApiKey = useCallback(async (key: string) => {

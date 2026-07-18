@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -397,6 +397,8 @@ function ApiSettings() {
   } = useSettings();
   const [draft, setDraft] = useState<AdsConfig>(() => emptyAdsConfig());
   const [promptDraft, setPromptDraft] = useState(DEFAULT_AI_SYSTEM_PROMPT);
+  /** Last prompt value synced from settings context — used to avoid wiping in-progress edits. */
+  const lastSyncedPromptRef = useRef<string | null>(null);
   const [keyRows, setKeyRows] = useState<GeminiKeyRow[]>(() => [newKeyRow('')]);
   const [visibleKeyIds, setVisibleKeyIds] = useState<Record<string, boolean>>({});
   const [adsSaved, setAdsSaved] = useState(false);
@@ -444,12 +446,24 @@ function ApiSettings() {
       });
   }, []);
 
+  // Hydrate ads draft when remote config changes (ads panel is not free-typed like the prompt).
   useEffect(() => {
-    if (!loading) {
-      setDraft(adsConfig);
-      setPromptDraft(aiSystemPrompt);
-    }
-  }, [loading, adsConfig, aiSystemPrompt]);
+    if (loading) return;
+    setDraft(adsConfig);
+  }, [loading, adsConfig]);
+
+  // Sync prompt from settings, but never clobber local edits while the draft is dirty.
+  useEffect(() => {
+    if (loading) return;
+    setPromptDraft((current) => {
+      const remote = aiSystemPrompt;
+      if (lastSyncedPromptRef.current === null || current === lastSyncedPromptRef.current) {
+        lastSyncedPromptRef.current = remote;
+        return remote;
+      }
+      return current;
+    });
+  }, [loading, aiSystemPrompt]);
 
   useEffect(() => {
     const parsed = parseGeminiKeysInput(geminiApiKey);
@@ -541,12 +555,24 @@ function ApiSettings() {
     if (!canSavePrompt) return;
     setSavingPrompt(true);
     setPromptError('');
+    setPromptSaved(false);
     try {
       await setAiSystemPrompt(promptDraft);
+      const clean = promptDraft.trim() || DEFAULT_AI_SYSTEM_PROMPT;
+      lastSyncedPromptRef.current = clean;
+      setPromptDraft(clean);
       setPromptSaved(true);
-      setTimeout(() => setPromptSaved(false), 3000);
-    } catch {
-      setPromptError('Échec de l’enregistrement du prompt. Réessayez.');
+      setTimeout(() => setPromptSaved(false), 4000);
+    } catch (err) {
+      const detail =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message?: unknown }).message || '')
+          : '';
+      setPromptError(
+        detail
+          ? `Échec de l’enregistrement du prompt : ${detail}`
+          : 'Échec de l’enregistrement du prompt. Vérifiez la connexion Supabase / RLS puis réessayez.',
+      );
     } finally {
       setSavingPrompt(false);
     }
@@ -554,6 +580,8 @@ function ApiSettings() {
 
   const resetPrompt = () => {
     setPromptDraft(DEFAULT_AI_SYSTEM_PROMPT);
+    setPromptSaved(false);
+    setPromptError('');
   };
 
   const saveKey = async () => {

@@ -1,11 +1,7 @@
-/** Supabase `app_settings` key for the Gemini system prompt. */
-export const AI_SYSTEM_PROMPT_KEY = 'ai_system_prompt';
-
-/**
- * Default system instructions sent to Gemini (editable from Admin → Intégrations).
- * Vehicle / document specifics are appended separately as the user message.
- */
-export const DEFAULT_AI_SYSTEM_PROMPT = `Agis comme un expert mécanicien automobile français et analyste des prix du marché de la pièce auto (expert des tarifs Oscaro, Mister-Auto, PiècesAuto24). Tu es spécialisé dans l'analyse ultra-précise de devis.
+-- Refresh default AI system prompt (French market / Oscaro-style pricing).
+UPDATE app_settings
+SET
+  value = $prompt$Agis comme un expert mécanicien automobile français et analyste des prix du marché de la pièce auto (expert des tarifs Oscaro, Mister-Auto, PiècesAuto24). Tu es spécialisé dans l'analyse ultra-précise de devis.
 
 Tu dois impérativement analyser la marque, le modèle précis et la motorisation du véhicule soumis pour calibrer tes estimations de prix de manière ultra-réaliste.
 
@@ -27,46 +23,6 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide, sans texte avant ou après, sans 
     { "label": "Main d'œuvre", "prixGaragiste": 160, "prixReel": 80, "detail": "..." },
     { "label": "Rétroviseur droit", "prixGaragiste": 260, "prixReel": 130, "detail": "..." }
   ]
-}`;
-
-const LOCAL_CACHE_KEY = 'autodevis_ai_system_prompt_cache';
-
-let memoryCache: { value: string; at: number } | null = null;
-const MEMORY_TTL_MS = 60_000;
-
-export function normalizeAiSystemPrompt(raw: string | null | undefined): string {
-  const trimmed = (raw ?? '').trim();
-  return trimmed || DEFAULT_AI_SYSTEM_PROMPT;
-}
-
-export function cacheAiSystemPromptLocally(prompt: string): void {
-  const clean = normalizeAiSystemPrompt(prompt);
-  memoryCache = { value: clean, at: Date.now() };
-  try {
-    localStorage.setItem(LOCAL_CACHE_KEY, clean);
-  } catch {
-    /* ignore */
-  }
-}
-
-export function readCachedAiSystemPrompt(): string | null {
-  if (memoryCache && Date.now() - memoryCache.at < MEMORY_TTL_MS) {
-    return memoryCache.value;
-  }
-  try {
-    const raw = localStorage.getItem(LOCAL_CACHE_KEY);
-    if (raw?.trim()) {
-      const clean = normalizeAiSystemPrompt(raw);
-      memoryCache = { value: clean, at: Date.now() };
-      return clean;
-    }
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
-
-/** Invalidate TTL so the next Gemini call reloads from Supabase / context. */
-export function invalidateAiSystemPromptCache(): void {
-  memoryCache = null;
-}
+}$prompt$,
+  updated_at = now()
+WHERE key = 'ai_system_prompt';
