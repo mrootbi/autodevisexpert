@@ -74,6 +74,47 @@
   .prose-article a {
     @apply font-medium text-trust-700 underline decoration-trust-300 underline-offset-2 hover:text-trust-800;
   }
+  .prose-article img,
+  .blog-rich-editor .ql-editor img {
+    @apply max-w-full h-auto rounded-lg;
+  }
+  .prose-article img.blog-img-w-25,
+  .blog-rich-editor .ql-editor img.blog-img-w-25 {
+    width: 25%;
+  }
+  .prose-article img.blog-img-w-50,
+  .blog-rich-editor .ql-editor img.blog-img-w-50 {
+    width: 50%;
+  }
+  .prose-article img.blog-img-w-75,
+  .blog-rich-editor .ql-editor img.blog-img-w-75 {
+    width: 75%;
+  }
+  .prose-article img.blog-img-w-100,
+  .blog-rich-editor .ql-editor img.blog-img-w-100 {
+    width: 100%;
+  }
+  .prose-article img.blog-img-align-center,
+  .blog-rich-editor .ql-editor img.blog-img-align-center {
+    display: block;
+    float: none;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .prose-article img.blog-img-align-left,
+  .blog-rich-editor .ql-editor img.blog-img-align-left {
+    float: left;
+    margin: 0.5rem 1rem 0.75rem 0;
+  }
+  .prose-article img.blog-img-align-right,
+  .blog-rich-editor .ql-editor img.blog-img-align-right {
+    float: right;
+    margin: 0.5rem 0 0.75rem 1rem;
+  }
+  .blog-rich-editor .ql-editor img.blog-img-selected {
+    outline: 2px solid rgb(37 99 235 / 0.55);
+    outline-offset: 2px;
+  }
 
   .blog-rich-editor .ql-toolbar.ql-snow {
     @apply border-0 border-b border-slate-200 bg-slate-50 px-3 py-2;
