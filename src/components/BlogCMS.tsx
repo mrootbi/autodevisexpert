@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Pencil, Trash2, X, Save, Eye, FileText, CheckCircle2, ImagePlus, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Save, Eye, FileText, CheckCircle2, ImagePlus, Loader2, Sparkles } from 'lucide-react';
 import { BlogArticle } from '../lib/types';
 import { getBlogArticles, createArticle, updateArticle, deleteArticle, slugify } from '../lib/blogStore';
 import { readCoverImageFile } from '../lib/blogCover';
+import { uploadBlogImage } from '../lib/blogImages';
+import { generateSlugWithAi } from '../lib/blogSlug';
 import RichTextEditor from './RichTextEditor';
 import BlogArticlePreview from './BlogArticlePreview';
 import ArticleCover from './ArticleCover';
@@ -15,7 +17,10 @@ const COVER_OPTIONS = [
   'from-slate-700 to-trust-700',
 ];
 
-const emptyDraft: Omit<BlogArticle, 'slug' | 'date'> = {
+type ArticleDraft = Omit<BlogArticle, 'date'> & { date?: string };
+
+const emptyDraft: ArticleDraft = {
+  slug: '',
   title: '',
   excerpt: '',
   category: 'Mécanique',
@@ -25,9 +30,9 @@ const emptyDraft: Omit<BlogArticle, 'slug' | 'date'> = {
   content: '',
 };
 
-function draftToPreviewArticle(draft: typeof emptyDraft | BlogArticle): BlogArticle {
-  const slug = 'slug' in draft && draft.slug ? draft.slug : slugify(draft.title || 'apercu');
-  const date = 'date' in draft && draft.date ? draft.date : new Date().toISOString();
+function draftToPreviewArticle(draft: ArticleDraft): BlogArticle {
+  const slug = slugify(draft.slug || draft.title || 'apercu') || 'apercu';
+  const date = draft.date || new Date().toISOString();
   return { ...draft, slug, date };
 }
 
@@ -35,11 +40,14 @@ export default function BlogCMS() {
   const [articles, setArticles] = useState<BlogArticle[]>([]);
   const [editing, setEditing] = useState<BlogArticle | null>(null);
   const [creating, setCreating] = useState(false);
-  const [draft, setDraft] = useState<typeof emptyDraft | BlogArticle>(emptyDraft);
+  const [draft, setDraft] = useState<ArticleDraft>(emptyDraft);
   const [saved, setSaved] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [coverLoading, setCoverLoading] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
+  const [slugLoading, setSlugLoading] = useState(false);
+  const [slugError, setSlugError] = useState<string | null>(null);
+  const [slugManual, setSlugManual] = useState(false);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const refresh = () => setArticles(getBlogArticles());
@@ -51,6 +59,8 @@ export default function BlogCMS() {
     setEditing(null);
     setCreating(true);
     setCoverError(null);
+    setSlugError(null);
+    setSlugManual(false);
   };
 
   const startEdit = (a: BlogArticle) => {
@@ -58,6 +68,8 @@ export default function BlogCMS() {
     setEditing(a);
     setCreating(true);
     setCoverError(null);
+    setSlugError(null);
+    setSlugManual(true);
   };
 
   const cancel = () => {
@@ -66,19 +78,47 @@ export default function BlogCMS() {
     setDraft(emptyDraft);
     setPreviewOpen(false);
     setCoverError(null);
+    setSlugError(null);
+    setSlugManual(false);
   };
+
+  const resolveSlug = () => slugify(draft.slug || draft.title) || 'article';
 
   const save = () => {
     if (!draft.title.trim()) return;
+    const slug = resolveSlug();
     if (editing) {
-      updateArticle(editing.slug, { ...draft, slug: slugify(draft.title) });
+      updateArticle(editing.slug, { ...draft, slug });
     } else {
-      createArticle(draft);
+      createArticle({ ...draft, slug });
     }
     refresh();
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
     cancel();
+  };
+
+  const runAiSlug = async () => {
+    if (!draft.title.trim()) {
+      setSlugError('Saisissez d’abord un titre.');
+      return;
+    }
+    setSlugLoading(true);
+    setSlugError(null);
+    try {
+      const slug = await generateSlugWithAi(draft.title);
+      setDraft((prev) => ({ ...prev, slug }));
+      setSlugManual(true);
+    } catch (err) {
+      setSlugError(err instanceof Error ? err.message : 'Impossible de générer le slug.');
+    } finally {
+      setSlugLoading(false);
+    }
+  };
+
+  const handleTitleBlur = () => {
+    if (slugManual || draft.slug.trim() || !draft.title.trim()) return;
+    setDraft((prev) => ({ ...prev, slug: slugify(prev.title) }));
   };
 
   const remove = (slug: string) => {
@@ -148,24 +188,53 @@ export default function BlogCMS() {
             </div>
           </header>
 
-          <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
-            <div className="card space-y-5 p-5 sm:p-6">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+            <div className="card space-y-6 p-5 sm:p-6">
               <div>
                 <label className="label-field">Titre *</label>
                 <input
                   className="input-field text-base font-semibold"
                   value={draft.title}
                   onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                  onBlur={handleTitleBlur}
                   placeholder="Ex : Arnaque garagiste : les pièces gonflées"
                 />
-                {draft.title && (
-                  <p className="mt-1.5 text-xs text-slate-400">
-                    Slug : <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono">/blog/{slugify(draft.title)}</code>
-                  </p>
-                )}
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="label-field">Slug (URL de l&apos;article)</label>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <div className="relative min-w-0 flex-1">
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-slate-400">/blog/</span>
+                    <input
+                      className="input-field pl-[3.25rem] font-mono text-sm"
+                      value={draft.slug}
+                      onChange={(e) => {
+                        setSlugManual(true);
+                        setDraft({ ...draft, slug: e.target.value });
+                      }}
+                      onBlur={() => setDraft((prev) => ({ ...prev, slug: slugify(prev.slug) || prev.slug }))}
+                      placeholder="mon-titre-article"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void runAiSlug()}
+                    disabled={slugLoading || !draft.title.trim()}
+                    className="btn-ghost inline-flex shrink-0 items-center justify-center gap-1.5 px-3 py-2.5 text-xs"
+                    title="Générer un slug SEO via Gemini"
+                  >
+                    {slugLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                    Générer par IA
+                  </button>
+                </div>
+                <p className="mt-1.5 text-xs text-slate-400">
+                  Aperçu : <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono">/blog/{resolveSlug()}</code>
+                </p>
+                {slugError && <p className="mt-1.5 text-xs text-action-redDark">{slugError}</p>}
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-3">
                 <div>
                   <label className="label-field">Catégorie</label>
                   <input className="input-field" value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} />
@@ -174,7 +243,7 @@ export default function BlogCMS() {
                   <label className="label-field">Auteur</label>
                   <input className="input-field" value={draft.author} onChange={(e) => setDraft({ ...draft, author: e.target.value })} />
                 </div>
-                <div className="sm:col-span-2">
+                <div>
                   <label className="label-field">Temps de lecture</label>
                   <input className="input-field" value={draft.readingTime} onChange={(e) => setDraft({ ...draft, readingTime: e.target.value })} placeholder="5 min" />
                 </div>
@@ -183,7 +252,7 @@ export default function BlogCMS() {
               <div>
                 <label className="label-field">Extrait (meta description)</label>
                 <textarea
-                  className="input-field min-h-[72px] resize-y"
+                  className="input-field min-h-[88px] resize-y"
                   value={draft.excerpt}
                   onChange={(e) => setDraft({ ...draft, excerpt: e.target.value })}
                   placeholder="Résumé court affiché dans la liste et les réseaux sociaux."
@@ -191,7 +260,7 @@ export default function BlogCMS() {
               </div>
             </div>
 
-            <div className="card space-y-4 p-5 sm:p-6">
+            <aside className="card space-y-5 p-5 sm:p-6 lg:sticky lg:top-6 lg:self-start">
               <div>
                 <label className="label-field">Image de couverture</label>
                 <div className="overflow-hidden rounded-xl border border-slate-200">
@@ -210,11 +279,11 @@ export default function BlogCMS() {
                     type="button"
                     disabled={coverLoading}
                     onClick={() => coverInputRef.current?.click()}
-                    className="btn-ghost flex-1 py-2 text-xs sm:flex-none"
+                    className="btn-ghost flex-1 py-2 text-xs"
                   >
                     <ImagePlus className="h-4 w-4" /> Choisir une image
                   </button>
-                  {'coverImage' in draft && draft.coverImage && (
+                  {draft.coverImage && (
                     <button
                       type="button"
                       onClick={() => setDraft({ ...draft, coverImage: undefined })}
@@ -236,15 +305,16 @@ export default function BlogCMS() {
                 </select>
                 <p className="mt-1.5 text-xs text-slate-400">Utilisé si aucune image n&apos;est téléversée.</p>
               </div>
-            </div>
+            </aside>
           </div>
 
-          <div className="card p-5 sm:p-6">
+          <div className="card space-y-3 p-5 sm:p-6">
             <label className="label-field">Contenu</label>
             <RichTextEditor
               value={draft.content}
               onChange={(html) => setDraft({ ...draft, content: html })}
-              placeholder="Rédigez votre article — titres, listes, liens…"
+              onImageUpload={uploadBlogImage}
+              placeholder="Rédigez votre article — titres, listes, liens… Collez une image avec Ctrl+V."
             />
           </div>
 

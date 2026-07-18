@@ -427,6 +427,14 @@ Deno.serve(async (req) => {
     return json(400, { error: 'Invalid JSON', code: 'BAD_REQUEST' });
   }
 
+  const userInput = sanitizeUserText(String(payload.userInput ?? ''));
+  const mode =
+    payload.mode === 'devis' || payload.mode === 'symptomes' || payload.mode === 'slug'
+      ? payload.mode
+      : undefined;
+  const document = payload.document;
+  const isSlugMode = mode === 'slug';
+
   const vehicleRaw = payload.vehicle ?? {};
   const vehicle: Record<string, string | undefined> = {
     marque: sanitizeUserText(String(vehicleRaw.marque ?? '')).slice(0, 80),
@@ -436,19 +444,20 @@ Deno.serve(async (req) => {
     kilometrage: sanitizeUserText(String(vehicleRaw.kilometrage ?? '')).slice(0, 20),
   };
 
-  const userInput = sanitizeUserText(String(payload.userInput ?? ''));
-  const mode = payload.mode === 'devis' || payload.mode === 'symptomes' ? payload.mode : undefined;
-  const document = payload.document;
-
-  if (!vehicle.marque || !vehicle.modele) {
-    return json(400, { error: 'Véhicule incomplet.', code: 'INVALID_VEHICLE' });
+  if (isSlugMode) {
+    if (!userInput) {
+      return json(400, { error: 'Titre manquant pour générer le slug.', code: 'EMPTY_INPUT' });
+    }
+  } else {
+    if (!vehicle.marque || !vehicle.modele) {
+      return json(400, { error: 'Véhicule incomplet.', code: 'INVALID_VEHICLE' });
+    }
+    if (!userInput && !document?.base64) {
+      return json(400, { error: 'Aucune donnée à analyser.', code: 'EMPTY_INPUT' });
+    }
   }
 
-  if (!userInput && !document?.base64) {
-    return json(400, { error: 'Aucune donnée à analyser.', code: 'EMPTY_INPUT' });
-  }
-
-  if (document) {
+  if (document && !isSlugMode) {
     const mime = String(document.mimeType || '').toLowerCase().trim();
     const base64 = String(document.base64 || '').replace(/\s+/g, '');
     if (!ALLOWED_MIME.has(mime) || !isValidBase64(base64)) {
@@ -482,22 +491,31 @@ Deno.serve(async (req) => {
 
   const orderedKeys = shuffleKeys(keys);
   console.log(
-    `[gemini-analyze] ip=${ip} chain=${MODEL_FALLBACK_CHAIN.join(' → ')}; keys=${orderedKeys.length}`,
+    `[gemini-analyze] ip=${ip} mode=${mode ?? 'default'} chain=${MODEL_FALLBACK_CHAIN.join(' → ')}; keys=${orderedKeys.length}`,
   );
 
-  const systemPrompt = (map[PROMPT_KEY] || '').trim() || DEFAULT_SYSTEM_PROMPT;
-  const userPrompt = buildUserPrompt(vehicle, userInput, !!document, mode);
+  const SLUG_SYSTEM_PROMPT =
+    'Tu es un expert SEO français. À partir du titre fourni, génère UNIQUEMENT un slug URL optimisé : minuscules, sans accents, mots séparés par des tirets, sans slash ni ponctuation, maximum 80 caractères. Réponds avec le slug seul — aucun texte, aucune guillemet, aucun markdown.';
+
+  const systemPrompt = isSlugMode
+    ? SLUG_SYSTEM_PROMPT
+    : (map[PROMPT_KEY] || '').trim() || DEFAULT_SYSTEM_PROMPT;
+  const userPrompt = isSlugMode
+    ? `Titre de l'article : ${userInput}`
+    : buildUserPrompt(vehicle, userInput, !!document, mode);
 
   type Part = { text: string } | { inlineData: { mimeType: string; data: string } };
   const parts: Part[] = [{ text: userPrompt }];
-  if (document?.base64 && document?.mimeType) {
+  if (!isSlugMode && document?.base64 && document?.mimeType) {
     parts.push({ inlineData: { mimeType: document.mimeType, data: document.base64 } });
   }
 
   const body = JSON.stringify({
     systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: [{ parts }],
-    generationConfig: { responseMimeType: 'application/json' },
+    generationConfig: isSlugMode
+      ? { temperature: 0.2, maxOutputTokens: 64 }
+      : { responseMimeType: 'application/json' },
   });
 
   const attempt = await runWithModelFallback(orderedKeys, body);

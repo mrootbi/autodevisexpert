@@ -133,7 +133,7 @@ async function adminFetch(path: string, init: RequestInit = {}): Promise<Respons
 
 /** Optional Edge path for public analysis only (keys stay server-side when Edge is deployed). */
 export async function callGeminiAnalyzeEdge(payload: {
-  vehicle: Record<string, string | undefined>;
+  vehicle?: Record<string, string | undefined>;
   userInput: string;
   mode?: string;
   document?: { base64: string; mimeType: string; fileName?: string };
