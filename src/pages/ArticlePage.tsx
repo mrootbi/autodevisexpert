@@ -148,10 +148,11 @@ export default function ArticlePage() {
             <div className={`min-w-0 ${showSidebarAd ? 'lg:max-w-3xl' : 'mx-auto max-w-3xl'}`}>
               {/* CMS body — must keep real <h2>/<h3> tags for crawlers */}
               <div
-                className="prose-article"
+                className="prose-article min-w-0 max-w-full overflow-x-clip"
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
               />
 
+              {/* In-article ad: mobile-bounded, CLS-reserved, compact on small screens */}
               <NativeAdCard />
 
               <aside className="mt-10 rounded-2xl bg-trust-50 p-5 ring-1 ring-trust-100 sm:p-6">

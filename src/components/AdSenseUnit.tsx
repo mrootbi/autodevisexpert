@@ -35,7 +35,8 @@ const SLOT_FORMAT: Record<AdSlotKey, string> = {
 };
 
 const SLOT_MIN_HEIGHT: Record<AdSlotKey, string> = {
-  header: 'min-h-[90px]',
+  header: 'min-h-[90px] sm:min-h-[100px]',
+  /** Reserve space on mobile to avoid CLS when the creative paints. */
   inArticle: 'min-h-[250px]',
   sidebar: 'min-h-[280px]',
 };
@@ -138,15 +139,15 @@ function AdSenseUnitLive({
   return (
     <div
       ref={containerRef}
-      className={`adsense-unit w-full overflow-hidden ${SLOT_MIN_HEIGHT[slot]} ${className}`}
+      className={`adsense-unit box-border w-full max-w-full overflow-hidden ${SLOT_MIN_HEIGHT[slot]} ${className}`}
       data-ad-placement={placement}
       data-adsense-enabled-key={ADSENSE_DB_KEYS.enabled}
       data-adsense-slot-key={AD_SLOT_TO_DB_KEY[slot]}
       aria-label="Publicité"
     >
       <ins
-        className="adsbygoogle"
-        style={{ display: 'block' }}
+        className="adsbygoogle block w-full max-w-full overflow-hidden"
+        style={{ display: 'block', width: '100%', maxWidth: '100%', overflow: 'hidden' }}
         data-ad-client={client}
         data-ad-slot={slotId}
         data-ad-format={SLOT_FORMAT[slot]}
