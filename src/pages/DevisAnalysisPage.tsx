@@ -85,9 +85,20 @@ export default function DevisAnalysisPage() {
           mainEntityOfPage: `${SITE_BASE_URL}${canonicalPath}`,
           about: {
             '@type': 'Vehicle',
-            brand: report.marque,
+            name: `${report.marque} ${report.modele}`.trim(),
+            brand: {
+              '@type': 'Brand',
+              name: report.marque,
+            },
             model: report.modele,
             vehicleEngine: report.moteur || undefined,
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'EUR',
+              availability: 'https://schema.org/InStock',
+              description: 'Analyse de devis AutoDevis Expert — rapport gratuit et anonymisé',
+            },
           },
         }}
       />
