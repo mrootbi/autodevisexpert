@@ -45,16 +45,53 @@
       gtag('js', new Date());
       gtag('config', 'G-VJHYYKV4F7');
     </script>
+
+    <!-- SiteNavigationElement — helps Google discover candidate sitelinks -->
+    <script type="application/ld+json" id="ade-site-navigation-jsonld">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Navigation principale AutoDevis Expert",
+      "itemListElement": [
+        {
+          "@type": "SiteNavigationElement",
+          "position": 1,
+          "name": "Accueil",
+          "url": "https://www.autodevisexpert.com/"
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "position": 2,
+          "name": "Blog",
+          "url": "https://www.autodevisexpert.com/blog"
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "position": 3,
+          "name": "Analyser un devis",
+          "url": "https://www.autodevisexpert.com/#outil"
+        },
+        {
+          "@type": "SiteNavigationElement",
+          "position": 4,
+          "name": "Contact",
+          "url": "https://www.autodevisexpert.com/contact"
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <!-- Crawlable fallback when JS is disabled / before hydration -->
     <noscript>
-      <nav aria-label="Navigation">
-        <a href="/">Accueil</a> —
-        <a href="/blog">Blog</a> —
-        <a href="/contact">Contact</a> —
-        <a href="/#outil">Analyser un devis</a>
+      <nav aria-label="Navigation principale">
+        <ul>
+          <li><a href="/">Accueil</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/#outil">Analyser un devis</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
       </nav>
       <h1>AutoDevis Expert — Comparateur de devis garagiste</h1>
       <h2>Analysez votre devis auto et évitez les marges gonflées</h2>

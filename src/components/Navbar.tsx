@@ -48,16 +48,24 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Navigation principale">
-          {links.map((l) => (
-            <NavLink key={l.to} to={l.to} end={l.end} className={linkClass}>
-              {l.label}
-            </NavLink>
-          ))}
-          <AnalysesNavLink />
-          <Link to="/#outil" className="btn-primary ml-2 px-4">
-            Analyser un devis
-          </Link>
+        <nav className="hidden md:block" aria-label="Navigation principale">
+          <ul className="flex list-none items-center gap-1 p-0 m-0">
+            {links.map((l) => (
+              <li key={l.to}>
+                <NavLink to={l.to} end={l.end} className={linkClass}>
+                  {l.label}
+                </NavLink>
+              </li>
+            ))}
+            <li>
+              <AnalysesNavLink />
+            </li>
+            <li>
+              <Link to="/#outil" className="btn-primary ml-2 px-4">
+                Analyser un devis
+              </Link>
+            </li>
+          </ul>
         </nav>
 
         <button
@@ -66,30 +74,40 @@ export default function Navbar() {
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
           aria-expanded={open}
+          aria-controls="mobile-primary-nav"
         >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
       {open && (
-        <nav className="border-t border-slate-200 bg-white md:hidden animate-fadeIn" aria-label="Menu mobile">
-          <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3">
+        <nav
+          id="mobile-primary-nav"
+          className="border-t border-slate-200 bg-white md:hidden animate-fadeIn"
+          aria-label="Menu mobile"
+        >
+          <ul className="mx-auto flex max-w-7xl list-none flex-col gap-1 px-4 py-3 m-0">
             {links.map((l) => (
-              <NavLink
-                key={l.to}
-                to={l.to}
-                end={l.end}
-                className={linkClass}
-                onClick={() => setOpen(false)}
-              >
-                {l.label}
-              </NavLink>
+              <li key={l.to}>
+                <NavLink
+                  to={l.to}
+                  end={l.end}
+                  className={linkClass}
+                  onClick={() => setOpen(false)}
+                >
+                  {l.label}
+                </NavLink>
+              </li>
             ))}
-            <AnalysesNavLink onClick={() => setOpen(false)} />
-            <Link to="/#outil" className="btn-primary mt-2 w-full" onClick={() => setOpen(false)}>
-              Analyser un devis
-            </Link>
-          </div>
+            <li>
+              <AnalysesNavLink onClick={() => setOpen(false)} />
+            </li>
+            <li>
+              <Link to="/#outil" className="btn-primary mt-2 w-full" onClick={() => setOpen(false)}>
+                Analyser un devis
+              </Link>
+            </li>
+          </ul>
         </nav>
       )}
     </header>

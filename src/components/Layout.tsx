@@ -4,6 +4,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import AdSenseScript from './AdSenseScript';
 import AdSenseUnit from './AdSenseUnit';
+import SiteNavigationJsonLd from './SiteNavigationJsonLd';
 import { useSettings } from '../lib/settingsContext';
 import { canRenderAdSlot } from '../lib/adsConfig';
 
@@ -21,6 +22,7 @@ export default function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
+      <SiteNavigationJsonLd />
       <AdSenseScript />
       <Navbar />
       {showHeaderAd && (

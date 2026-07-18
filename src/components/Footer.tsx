@@ -26,7 +26,7 @@ export default function Footer() {
           </h4>
           <ul className="space-y-2 text-sm">
             <li><Link to="/#outil" className="hover:text-white">Analyser un devis</Link></li>
-            <li><Link to="/blog" className="hover:text-white">Blog mécanique</Link></li>
+            <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
             <li><Link to="/blog/arnaques-pieces-gonflees" className="hover:text-white">Marges pièces gonflées</Link></li>
             <li><Link to="/blog/g12-plus-vs-g13-tdi" className="hover:text-white">G12+ vs G13</Link></li>
           </ul>
