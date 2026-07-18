@@ -5,6 +5,8 @@ import NativeAdCard from '../components/NativeAdCard';
 import RecentAnalyses from '../components/RecentAnalyses';
 import { useBlogArticles } from '../lib/blogStore';
 import { SITE_BASE_URL } from '../lib/siteUrl';
+import ArticleCover from '../components/ArticleCover';
+import type { BlogArticle } from '../lib/types';
 
 /** Devis tool + car DB + markdown — deferred so the hero paints first on mobile. */
 const DevisTool = lazy(() => import('../components/DevisTool'));
@@ -196,7 +198,7 @@ function LastArticles() {
         ) : (
           <div className="grid gap-6 md:grid-cols-3">
             {top3.map((a) => (
-              <ArticleTeaser key={a.slug} slug={a.slug} title={a.title} category={a.category} />
+              <ArticleTeaser key={a.slug} article={a} />
             ))}
           </div>
         )}
@@ -205,17 +207,25 @@ function LastArticles() {
   );
 }
 
-function ArticleTeaser({ slug, title, category }: { slug: string; title: string; category: string }) {
+function ArticleTeaser({ article }: { article: BlogArticle }) {
   return (
-    <Link to={`/blog/${slug}`} className="card group flex flex-col overflow-hidden transition hover:-translate-y-1 hover:shadow-cardHover">
-      <div className="h-40 bg-gradient-to-br from-trust-700 to-trust-500 p-5">
-        <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
-          {category}
-        </span>
+    <Link
+      to={`/blog/${article.slug}`}
+      className="card group flex flex-col overflow-hidden transition hover:-translate-y-1 hover:shadow-cardHover"
+    >
+      <div className="relative h-40 overflow-hidden bg-slate-100">
+        <ArticleCover article={article} className="absolute inset-0 h-full w-full object-cover" />
+        {article.category && (
+          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-700 shadow-sm backdrop-blur">
+            {article.category}
+          </span>
+        )}
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-lg font-bold leading-snug text-slate-900 group-hover:text-trust-700">{title}</h3>
-        <span className="mt-auto pt-4 text-sm font-semibold text-trust-700">Lire l'article →</span>
+        <h3 className="font-display text-lg font-bold leading-snug text-slate-900 group-hover:text-trust-700">
+          {article.title}
+        </h3>
+        <span className="mt-auto pt-4 text-sm font-semibold text-trust-700">Lire l&apos;article →</span>
       </div>
     </Link>
   );
