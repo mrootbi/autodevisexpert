@@ -166,10 +166,18 @@ function Overview({ onJump }: { onJump: (t: Tab) => void }) {
   const [blogCount, setBlogCount] = useState(0);
 
   useEffect(() => {
-    fetchDevisHistory().then(setHistory);
+    let cancelled = false;
+    fetchDevisHistory().then((rows) => {
+      if (!cancelled) setHistory(rows);
+    });
     setBlogCount(getBlogArticles().length);
     void refreshGeminiApiKey();
-  }, [refreshGeminiApiKey]);
+    return () => {
+      cancelled = true;
+    };
+    // Mount-only: refreshGeminiApiKey is stable; do not re-fetch on every parent render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const hasAdsense = !loading && hasActiveAdsConfig(adsConfig);
   const configuredSlots = AD_SLOT_KEYS.filter((key) => isValidSlotId(adsConfig.slots[key])).length;
@@ -432,7 +440,9 @@ function ApiSettings() {
   useEffect(() => {
     void refreshSettings();
     void refreshGeminiApiKey();
-  }, [refreshSettings, refreshGeminiApiKey]);
+    // Mount-only bootstrapping for the Intégrations panel.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!canAccessGeminiSecrets()) return;

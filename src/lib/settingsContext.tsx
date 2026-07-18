@@ -1,4 +1,13 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useCallback,
+  useRef,
+  useMemo,
+} from 'react';
 import { supabase } from './supabase';
 import {
   AdsConfig,
@@ -27,8 +36,12 @@ const LEGACY_ADS_BLOB_KEY = 'ads_config';
 
 /** Skip Supabase round-trips when settings were fetched recently (Core Web Vitals). */
 const SETTINGS_TTL_MS = 5 * 60 * 1000;
+/** Cooldown after a Gemini admin-key fetch failure — prevents hammering Supabase. */
+const GEMINI_KEY_RETRY_COOLDOWN_MS = 30_000;
 let settingsFetchedAt = 0;
 let inflightSettingsRefresh: Promise<void> | null = null;
+let inflightGeminiKeyRefresh: Promise<void> | null = null;
+let geminiKeyBlockedUntil = 0;
 
 interface SettingsContextValue {
   adsConfig: AdsConfig;
@@ -151,23 +164,43 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [geminiApiKey, setLocalGeminiKey] = useState('');
   const [geminiKeyConfigured, setGeminiKeyConfigured] = useState(false);
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
 
   const refreshGeminiApiKey = useCallback(async () => {
     if (!isLoggedIn() || (!getAdminToken() && !getAdminPassword())) {
-      setLocalGeminiKey('');
-      setGeminiKeyConfigured(false);
+      // Avoid setState no-ops that can cascade re-renders when already cleared.
+      setLocalGeminiKey((prev) => (prev ? '' : prev));
+      setGeminiKeyConfigured((prev) => (prev ? false : prev));
       return;
     }
-    try {
-      const state = await fetchGeminiApiKeyAdmin();
-      setLocalGeminiKey(state.geminiApiKey);
-      setGeminiKeyConfigured(state.configured);
-    } catch (err) {
-      console.warn('Admin Gemini key refresh failed', err);
-    }
-  }, []);
 
-  const mountedRef = useRef(true);
+    if (Date.now() < geminiKeyBlockedUntil) {
+      return;
+    }
+
+    if (inflightGeminiKeyRefresh) {
+      await inflightGeminiKeyRefresh;
+      return;
+    }
+
+    inflightGeminiKeyRefresh = (async () => {
+      try {
+        const state = await fetchGeminiApiKeyAdmin();
+        geminiKeyBlockedUntil = 0;
+        if (!mountedRef.current) return;
+        setLocalGeminiKey(state.geminiApiKey);
+        setGeminiKeyConfigured(state.configured);
+      } catch (err) {
+        // Do NOT flip loading/config flags in a way that re-triggers fetchers.
+        geminiKeyBlockedUntil = Date.now() + GEMINI_KEY_RETRY_COOLDOWN_MS;
+        console.warn('Admin Gemini key refresh failed', err);
+      } finally {
+        inflightGeminiKeyRefresh = null;
+      }
+    })();
+
+    await inflightGeminiKeyRefresh;
+  }, []);
 
   const refreshSettings = useCallback(async (force = false) => {
     const cachedAds = readCachedAdsConfig();
@@ -189,36 +222,42 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
 
     inflightSettingsRefresh = (async () => {
-      const [remoteAds, remotePrompt] = await Promise.all([
-        fetchAdsConfigFromSupabase(),
-        fetchAiSystemPromptFromSupabase(),
-      ]);
+      try {
+        const [remoteAds, remotePrompt] = await Promise.all([
+          fetchAdsConfigFromSupabase(),
+          fetchAiSystemPromptFromSupabase(),
+        ]);
 
-      if (!mountedRef.current) return;
+        if (!mountedRef.current) return;
 
-      if (remoteAds) {
-        setLocalConfig(remoteAds.config);
-        cacheAdsConfigLocally(remoteAds.config);
-        // Migration write only from admin sessions — never seed as anonymous visitor.
-        if (remoteAds.shouldPersistDiscrete && isLoggedIn()) {
-          await supabase
-            .from('app_settings')
-            .upsert(adsConfigToUpsertPayload(remoteAds.config), { onConflict: 'key' });
+        if (remoteAds) {
+          setLocalConfig(remoteAds.config);
+          cacheAdsConfigLocally(remoteAds.config);
+          // Migration write only from admin sessions — never seed as anonymous visitor.
+          if (remoteAds.shouldPersistDiscrete && isLoggedIn()) {
+            await supabase
+              .from('app_settings')
+              .upsert(adsConfigToUpsertPayload(remoteAds.config), { onConflict: 'key' });
+          }
+        } else if (!cachedAds) {
+          setLocalConfig(emptyAdsConfig());
         }
-      } else if (!cachedAds) {
-        setLocalConfig(emptyAdsConfig());
-      }
 
-      if (remotePrompt != null) {
-        setLocalAiPrompt(remotePrompt);
-        cacheAiSystemPromptLocally(remotePrompt);
-      } else if (!cachedPrompt) {
-        // Local default only — do not write app_settings from public visitors.
-        setLocalAiPrompt(DEFAULT_AI_SYSTEM_PROMPT);
-        cacheAiSystemPromptLocally(DEFAULT_AI_SYSTEM_PROMPT);
-      }
+        if (remotePrompt != null) {
+          setLocalAiPrompt(remotePrompt);
+          cacheAiSystemPromptLocally(remotePrompt);
+        } else if (!cachedPrompt) {
+          // Local default only — do not write app_settings from public visitors.
+          setLocalAiPrompt(DEFAULT_AI_SYSTEM_PROMPT);
+          cacheAiSystemPromptLocally(DEFAULT_AI_SYSTEM_PROMPT);
+        }
 
-      settingsFetchedAt = Date.now();
+        settingsFetchedAt = Date.now();
+      } catch (err) {
+        // Mark TTL so forced loops still back off after a network failure.
+        settingsFetchedAt = Date.now();
+        console.warn('[Settings] refresh failed', err);
+      }
     })().finally(() => {
       inflightSettingsRefresh = null;
     });
@@ -228,6 +267,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshAdsConfig = useCallback(() => refreshSettings(true), [refreshSettings]);
+  /** Stable public API — must NOT be an inline arrow in the Provider value. */
+  const refreshSettingsForced = useCallback(() => refreshSettings(true), [refreshSettings]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -320,28 +361,40 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     [adsConfig, setAdsConfig],
   );
 
-  return (
-    <SettingsContext.Provider
-      value={{
-        adsConfig,
-        setAdsConfig,
-        adsensePublisherId: adsConfig.publisherId,
-        setAdsensePublisherId,
-        hasAds: hasActiveAdsConfig(adsConfig),
-        aiSystemPrompt,
-        setAiSystemPrompt,
-        geminiApiKey,
-        geminiKeyConfigured,
-        setGeminiApiKey,
-        refreshGeminiApiKey,
-        loading,
-        refreshAdsConfig,
-        refreshSettings: () => refreshSettings(true),
-      }}
-    >
-      {children}
-    </SettingsContext.Provider>
+  const contextValue = useMemo<SettingsContextValue>(
+    () => ({
+      adsConfig,
+      setAdsConfig,
+      adsensePublisherId: adsConfig.publisherId,
+      setAdsensePublisherId,
+      hasAds: hasActiveAdsConfig(adsConfig),
+      aiSystemPrompt,
+      setAiSystemPrompt,
+      geminiApiKey,
+      geminiKeyConfigured,
+      setGeminiApiKey,
+      refreshGeminiApiKey,
+      loading,
+      refreshAdsConfig,
+      refreshSettings: refreshSettingsForced,
+    }),
+    [
+      adsConfig,
+      setAdsConfig,
+      setAdsensePublisherId,
+      aiSystemPrompt,
+      setAiSystemPrompt,
+      geminiApiKey,
+      geminiKeyConfigured,
+      setGeminiApiKey,
+      refreshGeminiApiKey,
+      loading,
+      refreshAdsConfig,
+      refreshSettingsForced,
+    ],
   );
+
+  return <SettingsContext.Provider value={contextValue}>{children}</SettingsContext.Provider>;
 }
 
 export function useSettings() {
