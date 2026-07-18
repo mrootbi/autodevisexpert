@@ -150,14 +150,18 @@ async function loadReportRefsFromSupabase(limit = 500): Promise<SitemapReportRef
   }));
 }
 
-/** Rebuild sitemap from blog articles + quote reports and persist to Supabase. */
-export async function rebuildAndPersistSitemap(): Promise<string> {
+/** Build sitemap XML from live Supabase blog_articles + quote_reports (no cache). */
+export async function buildLiveSitemapXml(): Promise<string> {
   const [articles, reports] = await Promise.all([
     loadBlogRefsFromSupabase(),
     loadReportRefsFromSupabase(500),
   ]);
+  return buildSitemapXml(articles, reports);
+}
 
-  const xml = buildSitemapXml(articles, reports);
+/** Rebuild sitemap from blog articles + quote reports and persist to Supabase. */
+export async function rebuildAndPersistSitemap(): Promise<string> {
+  const xml = await buildLiveSitemapXml();
   await supabase.from('app_settings').upsert(
     { key: SUPABASE_SITEMAP_KEY, value: xml, updated_at: new Date().toISOString() },
     { onConflict: 'key' },

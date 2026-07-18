@@ -1,9 +1,83 @@
 import { defineConfig, loadEnv, type Plugin, type PreviewServer, type ViteDevServer } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const STATIC_ROUTES = [
+  { path: '/', priority: '1.0', changefreq: 'weekly' },
+  { path: '/blog', priority: '0.8', changefreq: 'weekly' },
+  { path: '/contact', priority: '0.5', changefreq: 'monthly' },
+  { path: '/mentions-legales', priority: '0.3', changefreq: 'yearly' },
+  { path: '/politique-de-confidentialite', priority: '0.3', changefreq: 'yearly' },
+  { path: '/cgu', priority: '0.3', changefreq: 'yearly' },
+] as const;
+
+const JUNK_SLUGS = new Set(['test', 'rfsfsf', 'asdf', 'xxx', 'demo', 'tmp']);
+
+function isIndexableBlogSlug(slug: string, title = ''): boolean {
+  const cleaned = (slug || '').trim().toLowerCase();
+  if (!cleaned || cleaned.length < 3) return false;
+  if (JUNK_SLUGS.has(cleaned)) return false;
+  if (/^(test|demo|tmp|asdf|xxx|lorem)([-_]|$)/i.test(cleaned)) return false;
+  const t = (title || '').trim();
+  if (t && t.length < 8) return false;
+  if (t && /^(test|rfsfsf|asdf|xxx|demo)$/i.test(t)) return false;
+  return true;
+}
+
+function escapeXml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
+}
+
+function buildSitemapXml(
+  baseUrl: string,
+  articles: { slug: string; date?: string }[],
+  reports: { pathSlug: string; date?: string }[],
+): string {
+  const today = new Date().toISOString().slice(0, 10);
+  const root = baseUrl.replace(/\/$/, '');
+  const urlEntry = (loc: string, lastmod: string, changefreq: string, priority: string) => `  <url>
+    <loc>${escapeXml(loc)}</loc>
+    <lastmod>${escapeXml(lastmod)}</lastmod>
+    <changefreq>${escapeXml(changefreq)}</changefreq>
+    <priority>${escapeXml(priority)}</priority>
+  </url>`;
+
+  const entries = [
+    ...STATIC_ROUTES.map((route) =>
+      urlEntry(
+        `${root}${route.path === '/' ? '/' : route.path}`,
+        today,
+        route.changefreq,
+        route.priority,
+      ),
+    ),
+    ...articles.map((article) =>
+      urlEntry(`${root}/blog/${article.slug}`, article.date || today, 'monthly', '0.7'),
+    ),
+    ...reports.map((report) =>
+      urlEntry(
+        `${root}/devis-analyses/${report.pathSlug}`,
+        report.date || today,
+        'weekly',
+        '0.6',
+      ),
+    ),
+  ];
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries.join('\n')}
+</urlset>
+`;
+}
+
 /**
  * Serve `/sitemap.xml` with Content-Type: application/xml during `vite` / `vite preview`,
- * reading the live XML from Supabase `app_settings.sitemap_xml`.
+ * rebuilding live from Supabase `blog_articles` + `quote_reports` (not a stale cache).
  */
 function dynamicSitemapPlugin(env: Record<string, string>): Plugin {
   const attach = (server: ViteDevServer | PreviewServer) => {
@@ -16,6 +90,7 @@ function dynamicSitemapPlugin(env: Record<string, string>): Plugin {
 
       const supabaseUrl = (env.VITE_SUPABASE_URL || '').replace(/\/$/, '');
       const anonKey = env.VITE_SUPABASE_ANON_KEY || '';
+      const siteBase = (env.SITE_BASE_URL || 'https://www.autodevisexpert.com').replace(/\/$/, '');
 
       if (!supabaseUrl || !anonKey) {
         res.statusCode = 503;
@@ -25,28 +100,64 @@ function dynamicSitemapPlugin(env: Record<string, string>): Plugin {
       }
 
       try {
-        const endpoint = `${supabaseUrl}/rest/v1/app_settings?key=eq.sitemap_xml&select=value`;
-        const response = await fetch(endpoint, {
-          headers: {
-            apikey: anonKey,
-            Authorization: `Bearer ${anonKey}`,
-            Accept: 'application/json',
-          },
-        });
+        const headers = {
+          apikey: anonKey,
+          Authorization: `Bearer ${anonKey}`,
+          Accept: 'application/json',
+        };
 
-        if (!response.ok) {
-          throw new Error(`Supabase HTTP ${response.status}`);
+        const [blogRes, reportRes] = await Promise.all([
+          fetch(`${supabaseUrl}/rest/v1/app_settings?key=eq.blog_articles&select=value`, {
+            headers,
+          }),
+          fetch(
+            `${supabaseUrl}/rest/v1/quote_reports?published=eq.true&select=path_slug,created_at&order=created_at.desc&limit=500`,
+            { headers },
+          ),
+        ]);
+
+        if (!blogRes.ok) {
+          throw new Error(`Supabase blog HTTP ${blogRes.status}`);
         }
 
-        const rows = (await response.json()) as { value?: string }[];
-        const xml = rows[0]?.value;
-        if (!xml || !xml.includes('<urlset')) {
-          throw new Error('sitemap_xml empty');
+        const blogRows = (await blogRes.json()) as { value?: string }[];
+        let articles: { slug: string; date?: string }[] = [];
+        if (blogRows[0]?.value) {
+          const parsed = JSON.parse(blogRows[0].value) as {
+            slug?: string;
+            date?: string;
+            title?: string;
+          }[];
+          if (Array.isArray(parsed)) {
+            articles = parsed
+              .filter(
+                (a) =>
+                  a &&
+                  typeof a.slug === 'string' &&
+                  isIndexableBlogSlug(a.slug, a.title || ''),
+              )
+              .map((a) => ({ slug: a.slug as string, date: a.date }));
+          }
         }
 
+        let reports: { pathSlug: string; date?: string }[] = [];
+        if (reportRes.ok) {
+          const reportRows = (await reportRes.json()) as {
+            path_slug?: string;
+            created_at?: string;
+          }[];
+          reports = (Array.isArray(reportRows) ? reportRows : [])
+            .filter((row) => row?.path_slug)
+            .map((row) => ({
+              pathSlug: String(row.path_slug),
+              date: String(row.created_at || '').slice(0, 10),
+            }));
+        }
+
+        const xml = buildSitemapXml(siteBase, articles, reports);
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-        res.setHeader('Cache-Control', 'public, max-age=300');
+        res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
         res.end(xml);
       } catch (err) {
         res.statusCode = 503;

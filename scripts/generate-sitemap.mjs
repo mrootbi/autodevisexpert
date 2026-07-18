@@ -1,8 +1,9 @@
 /**
- * Build-time sitemap fallback (public/sitemap.fallback.xml).
+ * Build-time sitemap fallback ONLY (public/sitemap.fallback.xml).
  *
- * Prefer the live endpoint in production:
- *   - Hostinger: /sitemap.xml → public/sitemap.php (reads Supabase)
+ * Production must NOT serve this file as /sitemap.xml:
+ *   - Vercel: /sitemap.xml → /api/sitemap (live Edge rebuild)
+ *   - Hostinger: /sitemap.xml → public/sitemap.php (live rebuild)
  *   - Supabase Edge: /functions/v1/sitemap
  *
  * Usage:

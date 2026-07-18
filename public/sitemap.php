@@ -10,7 +10,7 @@
  */
 
 header('Content-Type: application/xml; charset=UTF-8');
-header('Cache-Control: public, max-age=300');
+header('Cache-Control: public, max-age=0, must-revalidate');
 
 $configFile = __DIR__ . '/sitemap-config.php';
 $cfg = is_file($configFile) ? require $configFile : [];
@@ -146,12 +146,7 @@ if ($supabaseUrl === '' || $anonKey === '') {
   serve_fallback();
 }
 
-$cached = fetch_setting($supabaseUrl, 'sitemap_xml', $anonKey);
-if ($cached !== null && strpos($cached, '<urlset') !== false) {
-  echo $cached;
-  exit;
-}
-
+// Always rebuild from live blog_articles — never serve a stale sitemap_xml cache.
 $blogJson = fetch_setting($supabaseUrl, 'blog_articles', $anonKey);
 $articles = $blogJson !== null ? json_decode($blogJson, true) : [];
 if (!is_array($articles)) {

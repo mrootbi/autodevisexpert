@@ -1,6 +1,9 @@
 /**
  * Dynamic sitemap for AutoDevis Expert.
  *
+ * Always rebuilds from live Supabase rows (blog_articles + quote_reports).
+ * Does NOT serve a stale app_settings.sitemap_xml cache.
+ *
  * Deploy:
  *   supabase functions deploy sitemap --no-verify-jwt
  */
@@ -20,6 +23,8 @@ const STATIC_ROUTES = [
   { path: '/cgu', priority: '0.3', changefreq: 'yearly' },
 ] as const;
 
+const JUNK_SLUGS = new Set(['test', 'rfsfsf', 'asdf', 'xxx', 'demo', 'tmp']);
+
 function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -31,6 +36,17 @@ function escapeXml(value: string): string {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&apos;');
+}
+
+function isIndexableBlogSlug(slug: string, title = ''): boolean {
+  const cleaned = (slug || '').trim().toLowerCase();
+  if (!cleaned || cleaned.length < 3) return false;
+  if (JUNK_SLUGS.has(cleaned)) return false;
+  if (/^(test|demo|tmp|asdf|xxx|lorem)([-_]|$)/i.test(cleaned)) return false;
+  const t = (title || '').trim();
+  if (t && t.length < 8) return false;
+  if (t && /^(test|rfsfsf|asdf|xxx|demo)$/i.test(t)) return false;
+  return true;
 }
 
 function urlEntry(loc: string, lastmod: string, changefreq: string, priority: string): string {
@@ -87,7 +103,7 @@ function xmlResponse(body: string, status = 200): Response {
     status,
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=300',
+      'Cache-Control': 'public, max-age=0, must-revalidate',
       'Access-Control-Allow-Origin': '*',
     },
   });
@@ -109,16 +125,6 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const { data: cached } = await supabase
-    .from('app_settings')
-    .select('value')
-    .eq('key', 'sitemap_xml')
-    .maybeSingle();
-
-  if (cached?.value?.includes('<urlset')) {
-    return xmlResponse(cached.value);
-  }
-
   const [{ data: blog }, { data: reportRows }] = await Promise.all([
     supabase.from('app_settings').select('value').eq('key', 'blog_articles').maybeSingle(),
     supabase
@@ -132,10 +138,15 @@ Deno.serve(async (req) => {
   let articles: { slug: string; date?: string }[] = [];
   if (blog?.value) {
     try {
-      const parsed = JSON.parse(blog.value) as { slug?: string; date?: string }[];
+      const parsed = JSON.parse(blog.value) as { slug?: string; date?: string; title?: string }[];
       if (Array.isArray(parsed)) {
         articles = parsed
-          .filter((a) => a && typeof a.slug === 'string')
+          .filter(
+            (a) =>
+              a &&
+              typeof a.slug === 'string' &&
+              isIndexableBlogSlug(a.slug, a.title || ''),
+          )
           .map((a) => ({ slug: a.slug as string, date: a.date }));
       }
     } catch {

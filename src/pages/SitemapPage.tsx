@@ -2,12 +2,10 @@ import { useEffect, useState } from 'react';
 import { fetchSitemapXml } from '../lib/fetchSitemapXml';
 
 /**
- * Client-side fallback for `/sitemap.xml`.
+ * Client-side fallback for `/sitemap.xml` (in-app navigation only).
  *
- * Note: browsers/React cannot change the HTTP Content-Type of the initial
- * document response. On Hostinger, `public/.htaccess` + `sitemap.php` serve
- * real `application/xml` to crawlers. This page covers in-app navigation
- * and hosts without the PHP proxy (replaces the document with raw XML).
+ * Crawlers on Vercel hit `/api/sitemap` via vercel.json rewrite and receive
+ * real `application/xml` built live from Supabase. Hostinger uses sitemap.php.
  */
 export default function SitemapPage() {
   const [error, setError] = useState<string | null>(null);
