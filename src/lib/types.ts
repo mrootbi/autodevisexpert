@@ -42,6 +42,8 @@ export interface BlogArticle {
   /** Optional uploaded cover (data URL). Falls back to gradient `cover`. */
   coverImage?: string;
   content: string;
+  /** SEO keywords / tags (injected as meta name="keywords" on the public article page). */
+  keywords?: string[];
 }
 
 /** Sanitized, anonymous quote report for programmatic SEO pages. */

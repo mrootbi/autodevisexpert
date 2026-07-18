@@ -7,6 +7,8 @@ interface SEOProps {
   canonicalPath?: string;
   /** Absolute URL or site path (e.g. `/og-default.png`). Used for og:image / twitter:image. */
   image?: string;
+  /** Comma-separated or array — injected as <meta name="keywords">. */
+  keywords?: string | string[];
   /** When true, sets robots to noindex,nofollow (admin, 404). */
   noIndex?: boolean;
   jsonLd?: Record<string, unknown>;
@@ -58,11 +60,28 @@ function buildFullTitle(title: string): string {
   return `${trimmed} | ${SITE}`;
 }
 
+function normalizeKeywordsMeta(keywords?: string | string[]): string {
+  if (!keywords) return '';
+  const parts = Array.isArray(keywords) ? keywords : keywords.split(/[,;\n]+/);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of parts) {
+    const cleaned = raw.replace(/\s+/g, ' ').trim();
+    if (!cleaned) continue;
+    const key = cleaned.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(cleaned);
+  }
+  return out.join(', ');
+}
+
 export default function SEO({
   title,
   description = DEFAULT_DESC,
   canonicalPath = '/',
   image,
+  keywords,
   noIndex = false,
   jsonLd,
 }: SEOProps) {
@@ -70,6 +89,7 @@ export default function SEO({
   const metaDescription = truncateMetaDescription(description);
   const canonical = `${BASE_URL}${canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`}`;
   const imageUrl = resolveImageUrl(image);
+  const keywordsContent = normalizeKeywordsMeta(keywords);
   const seoKey = canonicalPath;
   const robots = noIndex ? 'noindex, nofollow' : 'index, follow';
 
@@ -77,6 +97,12 @@ export default function SEO({
     document.title = fullTitle;
     setMeta('name', 'description', metaDescription);
     setMeta('name', 'robots', robots);
+
+    if (keywordsContent) {
+      setMeta('name', 'keywords', keywordsContent);
+    } else {
+      document.head.querySelector('meta[name="keywords"]')?.remove();
+    }
 
     setMeta('property', 'og:type', 'website');
     setMeta('property', 'og:locale', 'fr_FR');
@@ -111,7 +137,7 @@ export default function SEO({
       if (ldEl && ldEl.parentNode) ldEl.parentNode.removeChild(ldEl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fullTitle, metaDescription, canonical, imageUrl, robots, seoKey, JSON.stringify(jsonLd)]);
+  }, [fullTitle, metaDescription, canonical, imageUrl, keywordsContent, robots, seoKey, JSON.stringify(jsonLd)]);
 
   return null;
 }

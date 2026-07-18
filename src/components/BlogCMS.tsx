@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type KeyboardEvent } from 'react';
 import { Plus, Pencil, Trash2, X, Save, Eye, FileText, CheckCircle2, ImagePlus, Loader2, Sparkles } from 'lucide-react';
 import { BlogArticle } from '../lib/types';
 import { getBlogArticles, createArticle, updateArticle, deleteArticle, slugify } from '../lib/blogStore';
 import { readCoverImageFile } from '../lib/blogCover';
 import { uploadBlogImage } from '../lib/blogImages';
 import { generateSlugWithAi } from '../lib/blogSlug';
+import { generateKeywordsWithAi, normalizeKeywords } from '../lib/blogKeywords';
 import RichTextEditor from './RichTextEditor';
 import BlogArticlePreview from './BlogArticlePreview';
 import ArticleCover from './ArticleCover';
@@ -28,6 +29,7 @@ const emptyDraft: ArticleDraft = {
   author: 'Régis M., ex-garagiste',
   cover: COVER_OPTIONS[0],
   content: '',
+  keywords: [],
 };
 
 function draftToPreviewArticle(draft: ArticleDraft): BlogArticle {
@@ -48,6 +50,9 @@ export default function BlogCMS() {
   const [slugLoading, setSlugLoading] = useState(false);
   const [slugError, setSlugError] = useState<string | null>(null);
   const [slugManual, setSlugManual] = useState(false);
+  const [keywordInput, setKeywordInput] = useState('');
+  const [keywordsLoading, setKeywordsLoading] = useState(false);
+  const [keywordsError, setKeywordsError] = useState<string | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const refresh = () => setArticles(getBlogArticles());
@@ -61,15 +66,19 @@ export default function BlogCMS() {
     setCoverError(null);
     setSlugError(null);
     setSlugManual(false);
+    setKeywordInput('');
+    setKeywordsError(null);
   };
 
   const startEdit = (a: BlogArticle) => {
-    setDraft(a);
+    setDraft({ ...a, keywords: normalizeKeywords(a.keywords) });
     setEditing(a);
     setCreating(true);
     setCoverError(null);
     setSlugError(null);
     setSlugManual(true);
+    setKeywordInput('');
+    setKeywordsError(null);
   };
 
   const cancel = () => {
@@ -80,22 +89,81 @@ export default function BlogCMS() {
     setCoverError(null);
     setSlugError(null);
     setSlugManual(false);
+    setKeywordInput('');
+    setKeywordsError(null);
   };
 
   const resolveSlug = () => slugify(draft.slug || draft.title) || 'article';
+  const draftKeywords = normalizeKeywords(draft.keywords);
 
   const save = () => {
     if (!draft.title.trim()) return;
     const slug = resolveSlug();
+    const keywords = normalizeKeywords([...draftKeywords, ...normalizeKeywords(keywordInput)]);
+    const payload = { ...draft, slug, keywords };
     if (editing) {
-      updateArticle(editing.slug, { ...draft, slug });
+      updateArticle(editing.slug, payload);
     } else {
-      createArticle({ ...draft, slug });
+      createArticle(payload);
     }
     refresh();
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
     cancel();
+  };
+
+  const addKeyword = (raw: string) => {
+    const next = normalizeKeywords([...draftKeywords, raw]);
+    if (next.length === draftKeywords.length) return;
+    setDraft((prev) => ({ ...prev, keywords: next }));
+    setKeywordInput('');
+  };
+
+  const removeKeyword = (tag: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      keywords: normalizeKeywords(prev.keywords).filter((k) => k.toLowerCase() !== tag.toLowerCase()),
+    }));
+  };
+
+  const onKeywordKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      if (keywordInput.trim()) addKeyword(keywordInput);
+      return;
+    }
+    if (e.key === 'Backspace' && !keywordInput && draftKeywords.length > 0) {
+      removeKeyword(draftKeywords[draftKeywords.length - 1]);
+    }
+  };
+
+  const runAiKeywords = async () => {
+    if (!draft.title.trim()) {
+      setKeywordsError('Saisissez d’abord un titre (idéalement aussi le contenu).');
+      return;
+    }
+    setKeywordsLoading(true);
+    setKeywordsError(null);
+    try {
+      const suggested = await generateKeywordsWithAi({
+        title: draft.title,
+        excerpt: draft.excerpt,
+        content: draft.content,
+        category: draft.category,
+      });
+      if (suggested.length === 0) {
+        setKeywordsError('Aucune suggestion reçue. Réessayez ou saisissez-les manuellement.');
+        return;
+      }
+      setDraft((prev) => ({
+        ...prev,
+        keywords: normalizeKeywords([...(prev.keywords ?? []), ...suggested]),
+      }));
+    } catch (err) {
+      setKeywordsError(err instanceof Error ? err.message : 'Impossible de suggérer les mots-clés.');
+    } finally {
+      setKeywordsLoading(false);
+    }
   };
 
   const runAiSlug = async () => {
@@ -232,6 +300,56 @@ export default function BlogCMS() {
                   Aperçu : <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono">/blog/{resolveSlug()}</code>
                 </p>
                 {slugError && <p className="mt-1.5 text-xs text-action-redDark">{slugError}</p>}
+              </div>
+
+              <div>
+                <label className="label-field">Mots-clés SEO (Tags)</label>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+                  <div className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-2.5 py-2 focus-within:border-trust-500 focus-within:ring-4 focus-within:ring-trust-100">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {draftKeywords.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1 rounded-full bg-trust-50 px-2.5 py-1 text-xs font-medium text-trust-800"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeKeyword(tag)}
+                            className="rounded-full p-0.5 text-trust-600 hover:bg-trust-100 hover:text-trust-900"
+                            title="Retirer"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                      <input
+                        className="min-w-[10rem] flex-1 border-0 bg-transparent px-1 py-1 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                        value={keywordInput}
+                        onChange={(e) => setKeywordInput(e.target.value)}
+                        onKeyDown={onKeywordKeyDown}
+                        onBlur={() => {
+                          if (keywordInput.trim()) addKeyword(keywordInput);
+                        }}
+                        placeholder={draftKeywords.length ? 'Ajouter…' : 'Ex : devis climatisation, prix recharge clim'}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void runAiKeywords()}
+                    disabled={keywordsLoading || !draft.title.trim()}
+                    className="btn-ghost inline-flex shrink-0 items-center justify-center gap-1.5 px-3 py-2.5 text-xs"
+                    title="Suggérer des mots-clés SEO via Gemini"
+                  >
+                    {keywordsLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                    Suggérer les Keywords par IA
+                  </button>
+                </div>
+                <p className="mt-1.5 text-xs text-slate-400">
+                  Entrée ou virgule pour ajouter un tag. Injectés en <code className="font-mono">&lt;meta name=&quot;keywords&quot;&gt;</code> sur l&apos;article public.
+                </p>
+                {keywordsError && <p className="mt-1.5 text-xs text-action-redDark">{keywordsError}</p>}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">

@@ -10,6 +10,7 @@ import { useSettings } from '../lib/settingsContext';
 import { canRenderAdSlot } from '../lib/adsConfig';
 import { sanitizeHtml } from '../lib/sanitize';
 import { SITE_BASE_URL } from '../lib/siteUrl';
+import { keywordsToMetaContent, normalizeKeywords } from '../lib/blogKeywords';
 
 export default function ArticlePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -55,6 +56,8 @@ export default function ArticlePage() {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const metaDescription = truncateMetaDescription(article.excerpt);
+  const articleKeywords = normalizeKeywords(article.keywords);
+  const keywordsMeta = keywordsToMetaContent(articleKeywords);
 
   return (
     <>
@@ -63,6 +66,7 @@ export default function ArticlePage() {
         description={metaDescription}
         canonicalPath={`/blog/${article.slug}`}
         image={article.coverImage || '/og-default.png'}
+        keywords={keywordsMeta || undefined}
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'BlogPosting',
@@ -72,6 +76,7 @@ export default function ArticlePage() {
           author: { '@type': 'Person', name: article.author },
           description: metaDescription,
           articleSection: article.category,
+          keywords: keywordsMeta || undefined,
           inLanguage: 'fr-FR',
           image: article.coverImage || `${SITE_BASE_URL}/og-default.png`,
           mainEntityOfPage: `${SITE_BASE_URL}/blog/${article.slug}`,
