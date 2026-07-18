@@ -60,9 +60,11 @@ export default function DevisAnalysisPage() {
   const savings = Math.max(0, report.totalGaragiste - report.totalReel);
   const pct =
     report.totalGaragiste > 0 ? Math.round((savings / report.totalGaragiste) * 100) : 0;
-  const h1 = report.title || `Analyse Devis ${report.marque} ${report.modele}`;
-  const description = `Comparatif anonymisé devis garagiste vs prix réel pour ${report.marque} ${report.modele}${report.moteur ? ` (${report.moteur})` : ''}. Économie estimée : ${formatEuro(savings)}.`;
+  const h1 = report.title || `Analyse Devis Garage : ${report.marque} ${report.modele}`;
+  const description = `Rapport d'analyse gratuit et avis d'expert mécanicien sur le devis de réparation pour ${report.marque} ${report.modele}.`;
   const canonicalPath = quoteReportPath(report);
+  const published = report.createdAt;
+  const imageUrl = `${SITE_BASE_URL}/og-default.png`;
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -77,27 +79,27 @@ export default function DevisAnalysisPage() {
           '@context': 'https://schema.org',
           '@type': 'Article',
           headline: h1,
-          datePublished: report.createdAt,
-          dateModified: report.createdAt,
           description,
+          image: imageUrl,
+          datePublished: published,
+          dateModified: published,
           inLanguage: 'fr-FR',
-          image: `${SITE_BASE_URL}/og-default.png`,
-          mainEntityOfPage: `${SITE_BASE_URL}${canonicalPath}`,
-          about: {
-            '@type': 'Vehicle',
-            name: `${report.marque} ${report.modele}`.trim(),
-            brand: {
-              '@type': 'Brand',
-              name: report.marque,
-            },
-            model: report.modele,
-            vehicleEngine: report.moteur || undefined,
-            offers: {
-              '@type': 'Offer',
-              price: '0',
-              priceCurrency: 'EUR',
-              availability: 'https://schema.org/InStock',
-              description: 'Analyse de devis AutoDevis Expert — rapport gratuit et anonymisé',
+          mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': `${SITE_BASE_URL}${canonicalPath}`,
+          },
+          author: {
+            '@type': 'Organization',
+            name: 'AutoDevis Expert',
+            url: SITE_BASE_URL,
+          },
+          publisher: {
+            '@type': 'Organization',
+            name: 'AutoDevis Expert',
+            url: SITE_BASE_URL,
+            logo: {
+              '@type': 'ImageObject',
+              url: imageUrl,
             },
           },
         }}
