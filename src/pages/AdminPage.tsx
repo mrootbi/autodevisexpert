@@ -37,6 +37,8 @@ import {
   hasActiveAdsConfig,
   isValidPublisherId,
   isValidSlotId,
+  normalizeAdsConfig,
+  serializeAdsConfig,
 } from '../lib/adsConfig';
 import { AI_SYSTEM_PROMPT_KEY, DEFAULT_AI_SYSTEM_PROMPT } from '../lib/aiPrompt';
 import {
@@ -397,6 +399,8 @@ function ApiSettings() {
   } = useSettings();
   const [draft, setDraft] = useState<AdsConfig>(() => emptyAdsConfig());
   const [promptDraft, setPromptDraft] = useState(DEFAULT_AI_SYSTEM_PROMPT);
+  /** Last AdSense config synced from settings — avoid wiping in-progress edits / toggles. */
+  const lastSyncedAdsRef = useRef<string | null>(null);
   /** Last prompt value synced from settings context — used to avoid wiping in-progress edits. */
   const lastSyncedPromptRef = useRef<string | null>(null);
   const [keyRows, setKeyRows] = useState<GeminiKeyRow[]>(() => [newKeyRow('')]);
@@ -446,10 +450,19 @@ function ApiSettings() {
       });
   }, []);
 
-  // Hydrate ads draft when remote config changes (ads panel is not free-typed like the prompt).
+  // Sync ads draft from settings, but never clobber local edits while the draft is dirty.
   useEffect(() => {
     if (loading) return;
-    setDraft(adsConfig);
+    setDraft((current) => {
+      const remote = normalizeAdsConfig(adsConfig);
+      const remoteKey = serializeAdsConfig(remote);
+      const currentKey = serializeAdsConfig(current);
+      if (lastSyncedAdsRef.current === null || currentKey === lastSyncedAdsRef.current) {
+        lastSyncedAdsRef.current = remoteKey;
+        return remote;
+      }
+      return current;
+    });
   }, [loading, adsConfig]);
 
   // Sync prompt from settings, but never clobber local edits while the draft is dirty.
@@ -524,18 +537,36 @@ function ApiSettings() {
   };
 
   const persistAds = async (next: AdsConfig) => {
-    const publisherValid = !next.publisherId || isValidPublisherId(next.publisherId);
-    const slotsValid = AD_SLOT_KEYS.every((key) => !next.slots[key] || isValidSlotId(next.slots[key]));
-    if (!publisherValid || !slotsValid) return;
+    const clean = normalizeAdsConfig(next);
+    const publisherValid = !clean.publisherId || isValidPublisherId(clean.publisherId);
+    const slotsValid = AD_SLOT_KEYS.every((key) => !clean.slots[key] || isValidSlotId(clean.slots[key]));
+    if (!publisherValid || !slotsValid) {
+      console.warn('[AdSense] Save blocked — invalid publisher or slot ID', clean);
+      setSaveError('Corrigez le Publisher ID ou les slots invalides avant d’enregistrer.');
+      return false;
+    }
 
     setSavingAds(true);
     setSaveError('');
     try {
-      await setAdsConfig(next);
+      await setAdsConfig(clean);
+      lastSyncedAdsRef.current = serializeAdsConfig(clean);
+      setDraft(clean);
       setAdsSaved(true);
       setTimeout(() => setAdsSaved(false), 3000);
-    } catch {
-      setSaveError('Échec de l’enregistrement dans Supabase. Réessayez.');
+      return true;
+    } catch (err) {
+      console.error('[AdSense] Admin save failed', err);
+      const detail =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message?: unknown }).message || '')
+          : '';
+      setSaveError(
+        detail
+          ? `Échec de l’enregistrement AdSense : ${detail}`
+          : 'Échec de l’enregistrement dans Supabase. Vérifiez la console / RLS puis réessayez.',
+      );
+      return false;
     } finally {
       setSavingAds(false);
     }
@@ -545,10 +576,18 @@ function ApiSettings() {
     await persistAds(draft);
   };
 
-  const toggleEnabled = async () => {
-    const next = { ...draft, enabled: !draft.enabled };
+  const toggleEnabled = () => {
+    if (savingAds) return;
+    const next = normalizeAdsConfig({ ...draft, enabled: !draft.enabled });
+    // Keep draft dirty vs last sync until persist succeeds — prevents refresh clobber.
     setDraft(next);
-    await persistAds(next);
+    setSaveError('');
+    void persistAds(next).then((ok) => {
+      if (!ok) {
+        // Revert toggle if validation/save failed.
+        setDraft((prev) => normalizeAdsConfig({ ...prev, enabled: !next.enabled }));
+      }
+    });
   };
 
   const savePrompt = async () => {
@@ -1020,8 +1059,8 @@ function ApiSettings() {
             aria-checked={draft.enabled}
             aria-label="Activer Google AdSense"
             disabled={savingAds}
-            onClick={() => void toggleEnabled()}
-            className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-trust-100 disabled:opacity-60 ${
+            onClick={toggleEnabled}
+            className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-trust-100 disabled:cursor-wait disabled:opacity-60 ${
               draft.enabled ? 'bg-action-green' : 'bg-slate-300'
             }`}
           >

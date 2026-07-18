@@ -66,6 +66,20 @@ export function normalizeAdsConfig(raw: unknown): AdsConfig {
   };
 }
 
+/** Stable serialization for dirty-checking admin draft vs remote config. */
+export function serializeAdsConfig(config: AdsConfig): string {
+  const clean = normalizeAdsConfig(config);
+  return JSON.stringify({
+    enabled: clean.enabled,
+    publisherId: clean.publisherId,
+    slots: {
+      header: clean.slots.header,
+      inArticle: clean.slots.inArticle,
+      sidebar: clean.slots.sidebar,
+    },
+  });
+}
+
 /** Build AdsConfig from a map of app_settings key → value. */
 export function adsConfigFromSettingsMap(map: Record<string, string>): AdsConfig {
   const enabledRaw = (map[ADSENSE_DB_KEYS.enabled] || '').trim().toLowerCase();

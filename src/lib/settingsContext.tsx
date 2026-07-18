@@ -239,16 +239,38 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const setAdsConfig = useCallback(async (config: AdsConfig) => {
     const clean = normalizeAdsConfig(config);
+    const payload = adsConfigToUpsertPayload(clean);
+
+    // Optimistic local update so the admin UI stays responsive while Supabase writes.
     setLocalConfig(clean);
     cacheAdsConfigLocally(clean);
+    settingsFetchedAt = Date.now();
 
-    const { error } = await supabase
-      .from('app_settings')
-      .upsert(adsConfigToUpsertPayload(clean), { onConflict: 'key' });
+    try {
+      const { data, error } = await supabase
+        .from('app_settings')
+        .upsert(payload, { onConflict: 'key' })
+        .select('key, value');
 
-    if (error) {
-      console.warn('Failed to save AdSense settings to Supabase', error);
-      throw error;
+      if (error) {
+        console.error('[AdSense] Supabase upsert failed', {
+          error,
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          payload,
+        });
+        throw error;
+      }
+
+      console.info(
+        '[AdSense] Upserted keys:',
+        (data ?? []).map((row) => row.key).join(', ') || payload.map((p) => p.key).join(', '),
+      );
+    } catch (err) {
+      console.error('[AdSense] Unexpected save error', err, { payload });
+      throw err;
     }
   }, []);
 
