@@ -1,11 +1,9 @@
-/** Supabase `app_settings` key for the Gemini system prompt. */
-export const AI_SYSTEM_PROMPT_KEY = 'ai_system_prompt';
-
-/**
- * Default system instructions sent to Gemini (editable from Admin → Intégrations).
- * Vehicle / document specifics are appended separately as the user message.
- */
-export const DEFAULT_AI_SYSTEM_PROMPT = `Agis comme un Ingénieur de Pricing Automobile Français et Expert Diagnostic. Tu ne dois JAMAIS produire une estimation "moyenne" ou générique : chaque prix doit être calculé par une méthode algorithmique explicite, ancrée sur le marché réel français (Oscaro, PiècesAuto24, Mister-Auto, Norauto, Carter-Cash).
+-- Replace the AI system prompt with an algorithmic, France-anchored pricing model:
+-- rigid prixReel formula (piece + MO), hard caps for clim/diagnostic/vidange, and
+-- a transparent "detail" field showing the exact math.
+UPDATE app_settings
+SET
+  value = $prompt$Agis comme un Ingénieur de Pricing Automobile Français et Expert Diagnostic. Tu ne dois JAMAIS produire une estimation "moyenne" ou générique : chaque prix doit être calculé par une méthode algorithmique explicite, ancrée sur le marché réel français (Oscaro, PiècesAuto24, Mister-Auto, Norauto, Carter-Cash).
 
 ═══════════════════════════════════════
 RÈGLE #1 — ANALYSE CONTEXTUELLE OBLIGATOIRE
@@ -71,7 +69,7 @@ RÈGLE #7 — CONTENU RÉDACTIONNEL
 ═══════════════════════════════════════
 RÈGLE #8 — FORMAT DE SORTIE (INVIOLABLE)
 ═══════════════════════════════════════
-RÉPONDS UNIQUEMENT avec un objet JSON valide. ZÉRO texte avant, ZÉRO texte après, ZÉRO bloc de code markdown (pas de \`\`\`json), ZÉRO commentaire. Respecte EXACTEMENT cette structure :
+RÉPONDS UNIQUEMENT avec un objet JSON valide. ZÉRO texte avant, ZÉRO texte après, ZÉRO bloc de code markdown (pas de ```json), ZÉRO commentaire. Respecte EXACTEMENT cette structure :
 
 {
   "expertAdvice": { "title": "...", "body": "...", "recommendation": "..." },
@@ -81,46 +79,6 @@ RÉPONDS UNIQUEMENT avec un objet JSON valide. ZÉRO texte avant, ZÉRO texte ap
   ]
 }
 
-Toute réponse ne respectant pas EXACTEMENT ce format JSON est considérée comme invalide.`;
-
-const LOCAL_CACHE_KEY = 'autodevis_ai_system_prompt_cache';
-
-let memoryCache: { value: string; at: number } | null = null;
-const MEMORY_TTL_MS = 60_000;
-
-export function normalizeAiSystemPrompt(raw: string | null | undefined): string {
-  const trimmed = (raw ?? '').trim();
-  return trimmed || DEFAULT_AI_SYSTEM_PROMPT;
-}
-
-export function cacheAiSystemPromptLocally(prompt: string): void {
-  const clean = normalizeAiSystemPrompt(prompt);
-  memoryCache = { value: clean, at: Date.now() };
-  try {
-    localStorage.setItem(LOCAL_CACHE_KEY, clean);
-  } catch {
-    /* ignore */
-  }
-}
-
-export function readCachedAiSystemPrompt(): string | null {
-  if (memoryCache && Date.now() - memoryCache.at < MEMORY_TTL_MS) {
-    return memoryCache.value;
-  }
-  try {
-    const raw = localStorage.getItem(LOCAL_CACHE_KEY);
-    if (raw?.trim()) {
-      const clean = normalizeAiSystemPrompt(raw);
-      memoryCache = { value: clean, at: Date.now() };
-      return clean;
-    }
-  } catch {
-    /* ignore */
-  }
-  return null;
-}
-
-/** Invalidate TTL so the next Gemini call reloads from Supabase / context. */
-export function invalidateAiSystemPromptCache(): void {
-  memoryCache = null;
-}
+Toute réponse ne respectant pas EXACTEMENT ce format JSON est considérée comme invalide.$prompt$,
+  updated_at = now()
+WHERE key = 'ai_system_prompt';

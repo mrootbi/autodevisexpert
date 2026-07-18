@@ -104,7 +104,28 @@ export default function BlogCMS() {
     }
   };
 
-  const formatDate = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const formatDate = (d: string | null | undefined): string => {
+    if (!d || !String(d).trim()) return '—';
+    const raw = String(d).trim();
+
+    // Prefer YYYY-MM-DD (stored by createArticle) to avoid timezone / locale pitfalls.
+    const isoDay = /^(\d{4})-(\d{2})-(\d{2})/.exec(raw);
+    if (isoDay) {
+      const [, y, m, day] = isoDay;
+      return `${day}/${m}/${y}`;
+    }
+
+    // DD/MM/YYYY already formatted
+    const fr = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(raw);
+    if (fr) {
+      const [, day, m, y] = fr;
+      return `${day.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+    }
+
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return '—';
+    return parsed.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
 
   if (creating) {
     const previewArticle = draftToPreviewArticle(draft);
@@ -260,23 +281,14 @@ export default function BlogCMS() {
           <p className="mt-3 text-sm text-slate-500">Aucun article. Créez le premier.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {articles.map((a) => (
-            <div key={a.slug} className="card flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
-              <div className="h-16 w-24 flex-shrink-0 overflow-hidden rounded-lg">
-                <ArticleCover article={a} className="h-full w-full" />
-              </div>
+            <div key={a.slug} className="card flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-trust-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-trust-700">{a.category}</span>
-                  <span className="text-xs text-slate-400">{formatDate(a.date)}</span>
-                  <span className="text-xs text-slate-400">· {a.readingTime}</span>
-                </div>
-                <h3 className="mt-1 font-display font-bold text-slate-900">{a.title}</h3>
-                <p className="mt-0.5 truncate text-sm text-slate-500">{a.excerpt}</p>
-                <p className="mt-1 text-xs text-slate-400">par {a.author} · <code className="font-mono">/blog/{a.slug}</code></p>
+                <h3 className="truncate font-display font-bold text-slate-900">{a.title}</h3>
+                <p className="mt-0.5 text-xs text-slate-400">{formatDate(a.date)}</p>
               </div>
-              <div className="flex flex-shrink-0 items-center gap-2">
+              <div className="flex flex-shrink-0 items-center gap-1">
                 <a href={`/#/blog/${a.slug}`} onClick={(e) => { e.preventDefault(); window.open(`#/blog/${a.slug}`, '_blank'); }} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-trust-700" title="Aperçu public">
                   <Eye className="h-4 w-4" />
                 </a>
