@@ -492,9 +492,13 @@ function ApiSettings() {
     }));
   };
 
+  const adsDirty =
+    serializeAdsConfig(draft) !== (lastSyncedAdsRef.current ?? serializeAdsConfig(adsConfig));
   const publisherOk = !draft.publisherId || isValidPublisherId(draft.publisherId);
   const slotsOk = AD_SLOT_KEYS.every((key) => !draft.slots[key] || isValidSlotId(draft.slots[key]));
-  const canSave = publisherOk && slotsOk;
+  // Turning ads OFF must always be savable — skip publisher/slot validation when disabled.
+  const fieldsValid = draft.enabled ? publisherOk && slotsOk : true;
+  const canSave = fieldsValid && adsDirty;
   const promptDirty = promptDraft.trim() !== aiSystemPrompt.trim();
   const canSavePrompt = promptDraft.trim().length > 40;
 
@@ -538,12 +542,16 @@ function ApiSettings() {
 
   const persistAds = async (next: AdsConfig) => {
     const clean = normalizeAdsConfig(next);
-    const publisherValid = !clean.publisherId || isValidPublisherId(clean.publisherId);
-    const slotsValid = AD_SLOT_KEYS.every((key) => !clean.slots[key] || isValidSlotId(clean.slots[key]));
-    if (!publisherValid || !slotsValid) {
-      console.warn('[AdSense] Save blocked — invalid publisher or slot ID', clean);
-      setSaveError('Corrigez le Publisher ID ou les slots invalides avant d’enregistrer.');
-      return false;
+
+    // Only enforce publisher/slot shape when ads are being left ON.
+    if (clean.enabled) {
+      const publisherValid = !clean.publisherId || isValidPublisherId(clean.publisherId);
+      const slotsValid = AD_SLOT_KEYS.every((key) => !clean.slots[key] || isValidSlotId(clean.slots[key]));
+      if (!publisherValid || !slotsValid) {
+        console.warn('[AdSense] Save blocked — invalid publisher or slot ID', clean);
+        setSaveError('Corrigez le Publisher ID ou les slots invalides avant d’enregistrer.');
+        return false;
+      }
     }
 
     setSavingAds(true);
@@ -579,12 +587,12 @@ function ApiSettings() {
   const toggleEnabled = () => {
     if (savingAds) return;
     const next = normalizeAdsConfig({ ...draft, enabled: !draft.enabled });
-    // Keep draft dirty vs last sync until persist succeeds — prevents refresh clobber.
+    // Optimistic UI — mark dirty so "Enregistrer AdSense" unlocks immediately.
     setDraft(next);
     setSaveError('');
+    // Auto-persist; turning OFF always allowed even with invalid slot fields.
     void persistAds(next).then((ok) => {
       if (!ok) {
-        // Revert toggle if validation/save failed.
         setDraft((prev) => normalizeAdsConfig({ ...prev, enabled: !next.enabled }));
       }
     });
@@ -1113,15 +1121,35 @@ function ApiSettings() {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <button onClick={() => void saveAds()} className="btn-green sm:w-auto" disabled={savingAds || !canSave}>
+          <button
+            type="button"
+            onClick={() => void saveAds()}
+            className="btn-green sm:w-auto"
+            disabled={savingAds || !canSave}
+            title={
+              !adsDirty
+                ? 'Aucune modification à enregistrer'
+                : draft.enabled && !fieldsValid
+                  ? 'Corrigez le Publisher ID ou les slots invalides'
+                  : 'Enregistrer la configuration AdSense'
+            }
+          >
             {adsSaved ? 'Enregistré' : 'Enregistrer AdSense'}
             {adsSaved ? <CheckCircle2 className="h-4 w-4" /> : <Save className="h-4 w-4" />}
           </button>
+          {adsDirty && !draft.enabled && (
+            <span className="text-xs font-medium text-slate-500">Désactivation prête à être enregistrée</span>
+          )}
         </div>
         {saveError && <p className="mt-2 text-xs font-medium text-action-redDark">{saveError}</p>}
+        {draft.enabled && !fieldsValid && (
+          <p className="mt-2 text-xs font-medium text-action-redDark">
+            Publisher ID ou slot invalide — corrigez-les, ou désactivez AdSense pour enregistrer quand même.
+          </p>
+        )}
         <p className="mt-3 text-xs text-slate-400">
           Upsert Supabase des 5 clés à chaque enregistrement ou bascule du commutateur. Slots vides = pas de pub. Les
-          pubs sont masquées sur le tableau de bord.
+          pubs sont masquées sur le tableau de bord. Désactiver AdSense ignore la validation des champs.
         </p>
 
         {adsSaved && (
