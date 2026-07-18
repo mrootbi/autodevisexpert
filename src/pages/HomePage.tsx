@@ -42,7 +42,6 @@ export default function HomePage() {
           inLanguage: 'fr-FR',
           url: `${SITE_BASE_URL}/`,
           image: `${SITE_BASE_URL}/og-default.png`,
-          offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
           description:
             "Comparateur de devis garagiste indépendant. Analysez votre devis gratuitement, comparez au prix réel et obtenez l'avis d'un expert mécanicien.",
         }}
