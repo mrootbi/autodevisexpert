@@ -434,6 +434,7 @@ function ManualTab({ onIdentified, initialVehicle }: { onIdentified: (v: Vehicle
               onChange={handleBrandChange}
               className={selectClassName}
               style={selectChevronStyle}
+              aria-label="Sélectionner la marque du véhicule"
             >
               <option value="" disabled hidden>
                 Sélectionner une marque
@@ -456,6 +457,7 @@ function ManualTab({ onIdentified, initialVehicle }: { onIdentified: (v: Vehicle
               disabled={selectableModels.length === 0}
               className={selectClassName}
               style={selectChevronStyle}
+              aria-label="Sélectionner le modèle du véhicule"
             >
               <option value="" disabled hidden>
                 Sélectionner un modèle
@@ -475,6 +477,7 @@ function ManualTab({ onIdentified, initialVehicle }: { onIdentified: (v: Vehicle
               disabled={engines.length === 0}
               className={selectClassName}
               style={selectChevronStyle}
+              aria-label="Sélectionner la motorisation du véhicule"
             >
               <option value="" disabled hidden>
                 Sélectionner une motorisation
