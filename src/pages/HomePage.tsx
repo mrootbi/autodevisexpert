@@ -35,15 +35,20 @@ export default function HomePage() {
         image="/og-default.png"
         jsonLd={{
           '@context': 'https://schema.org',
-          '@type': 'WebApplication',
+          '@type': 'WebSite',
           name: 'AutoDevis Expert',
-          applicationCategory: 'BusinessApplication',
-          operatingSystem: 'Web',
-          inLanguage: 'fr-FR',
           url: `${SITE_BASE_URL}/`,
-          image: `${SITE_BASE_URL}/og-default.png`,
           description:
-            "Comparateur de devis garagiste indépendant. Analysez votre devis gratuitement, comparez au prix réel et obtenez l'avis d'un expert mécanicien.",
+            'Comparateur de devis garage gratuit. Analysez votre devis gratuitement, comparez au prix réel et obtenez l\'avis d\'un expert mécanicien.',
+          inLanguage: 'fr-FR',
+          publisher: {
+            '@type': 'Organization',
+            name: 'AutoDevis Expert',
+            logo: {
+              '@type': 'ImageObject',
+              url: `${SITE_BASE_URL}/og-default.png`,
+            },
+          },
         }}
       />
 
