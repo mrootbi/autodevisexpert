@@ -422,7 +422,7 @@ function ModeCard({
       </span>
       <div>
         <p className="font-display font-bold text-slate-900">{title}</p>
-        <p className="mt-0.5 text-sm text-slate-500">{description}</p>
+        <p className="mt-0.5 text-sm text-slate-700">{description}</p>
       </div>
       {active && (
         <span className="absolute right-3 top-3">

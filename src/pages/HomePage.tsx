@@ -62,7 +62,7 @@ export default function HomePage() {
       <section id="outil" ref={toolRef} className="border-t border-slate-200 bg-white py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <header className="mx-auto mb-8 text-center sm:mb-10">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-action-green/10 px-3 py-1 text-xs font-semibold text-action-greenDark">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
               Comparateur de devis mécanique
             </span>
             <h2 className="mt-3 font-display text-2xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">

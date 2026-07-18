@@ -317,15 +317,19 @@ const SORTED_BRANDS = [...(carsData as CarsDatabase)]
 function CascadingSelectRow({
   step,
   label,
+  htmlFor,
   children,
 }: {
   step: 1 | 2 | 3;
   label: string;
+  htmlFor: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="min-w-0 flex-1">
-      <label className="label-field">{label}</label>
+      <label className="label-field" htmlFor={htmlFor}>
+        {label}
+      </label>
       <div className="flex items-stretch gap-3">
         <span
           aria-hidden
@@ -428,8 +432,9 @@ function ManualTab({ onIdentified, initialVehicle }: { onIdentified: (v: Vehicle
     <div className="space-y-5">
       <div className="space-y-4">
         <div className="flex flex-col gap-4 md:flex-row">
-          <CascadingSelectRow step={1} label="Constructeur">
+          <CascadingSelectRow step={1} label="Constructeur" htmlFor="vehicle-brand-select">
             <select
+              id="vehicle-brand-select"
               value={selectedBrand}
               onChange={handleBrandChange}
               className={selectClassName}
@@ -450,8 +455,9 @@ function ManualTab({ onIdentified, initialVehicle }: { onIdentified: (v: Vehicle
             </select>
           </CascadingSelectRow>
 
-          <CascadingSelectRow step={2} label="Modèle">
+          <CascadingSelectRow step={2} label="Modèle" htmlFor="vehicle-model-select">
             <select
+              id="vehicle-model-select"
               value={selectedModelValue}
               onChange={handleModelChange}
               disabled={selectableModels.length === 0}
@@ -470,8 +476,9 @@ function ManualTab({ onIdentified, initialVehicle }: { onIdentified: (v: Vehicle
             </select>
           </CascadingSelectRow>
 
-          <CascadingSelectRow step={3} label="Motorisation">
+          <CascadingSelectRow step={3} label="Motorisation" htmlFor="vehicle-engine-select">
             <select
+              id="vehicle-engine-select"
               value={selectedEngine}
               onChange={handleEngineChange}
               disabled={engines.length === 0}
