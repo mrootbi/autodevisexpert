@@ -1,0 +1,29 @@
+---
+description: Always commit and push completed code changes to GitHub (triggers Vercel)
+alwaysApply: true
+---
+
+# Auto commit + push (mandatory)
+
+For this project, a task is **not complete** until changes are on GitHub and Vercel can deploy.
+
+## When this applies
+
+After you successfully modify any file, fix a bug, update UI, or finish any code change that should ship:
+
+1. Stage: `git add .` (use full git path on Windows if needed: `C:\Program Files\Git\bin\git.exe`)
+2. Commit: `git commit -m "auto-update: [brief description of what changed]"`
+3. Push: `git push origin HEAD` (or `origin main` / the active branch)
+
+Do this as the **final step** of the turn — do not stop at local saves.
+
+## Exceptions
+
+- Do **not** commit secrets (`.env`, credentials, API keys).
+- If there is nothing to commit, skip (no empty commits).
+- If commit/push fails (auth, identity, hooks), fix or report the blocker; do not leave the user assuming it shipped.
+- Prefer one-shot identity via `git -c user.name=... -c user.email=...` from the last commit author — never run `git config` to set identity.
+
+## Overrides
+
+This project rule **overrides** any general preference to wait for an explicit commit request. In this repo, auto commit + push is the default.
