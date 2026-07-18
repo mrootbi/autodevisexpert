@@ -41,6 +41,11 @@ export default function HomePage() {
           description:
             'Comparateur de devis garage gratuit. Analysez votre devis gratuitement, comparez au prix réel et obtenez l\'avis d\'un expert mécanicien.',
           inLanguage: 'fr-FR',
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: `${SITE_BASE_URL}/blog?q={search_term_string}`,
+            'query-input': 'required name=search_term_string',
+          },
           publisher: {
             '@type': 'Organization',
             name: 'AutoDevis Expert',

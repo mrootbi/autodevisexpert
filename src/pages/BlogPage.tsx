@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Calendar, Clock, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 import ArticleCover from '../components/ArticleCover';
@@ -8,10 +8,21 @@ import { SITE_BASE_URL } from '../lib/siteUrl';
 
 export default function BlogPage() {
   const [articles, loading] = useBlogArticles();
+  const [searchParams] = useSearchParams();
+  const query = (searchParams.get('q') || '').trim().toLowerCase();
   const formatDate = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
-  const featured = articles[0];
-  const rest = articles.slice(1);
+  const filtered = query
+    ? articles.filter((a) => {
+        const haystack = [a.title, a.excerpt, a.category, a.slug, ...(a.keywords || [])]
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes(query);
+      })
+    : articles;
+
+  const featured = filtered[0];
+  const rest = filtered.slice(1);
 
   return (
     <>
@@ -49,14 +60,24 @@ export default function BlogPage() {
             Le regard d&apos;un mécano sur le métier : marges, pièces, devis, refroidissement…
             Tout ce qu&apos;on aurait aimé savoir avant de signer nos premières factures.
           </p>
+          {query && (
+            <p className="mt-4 text-sm text-trust-200">
+              Résultats pour « {searchParams.get('q')} » — {filtered.length} article
+              {filtered.length === 1 ? '' : 's'}
+            </p>
+          )}
         </div>
       </header>
 
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8" aria-label="Liste des articles">
         {loading ? (
           <p className="py-12 text-center text-slate-500">Chargement des articles…</p>
-        ) : articles.length === 0 ? (
-          <p className="py-12 text-center text-slate-500">Aucun article publié pour le moment.</p>
+        ) : filtered.length === 0 ? (
+          <p className="py-12 text-center text-slate-500">
+            {query
+              ? `Aucun article ne correspond à « ${searchParams.get('q')} ».`
+              : 'Aucun article publié pour le moment.'}
+          </p>
         ) : (
           <>
             {featured && (
