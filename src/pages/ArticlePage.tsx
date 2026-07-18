@@ -3,12 +3,11 @@ import { Calendar, Clock, ArrowLeft, ArrowRight, ChevronRight, Home } from 'luci
 import SEO, { truncateMetaDescription } from '../components/SEO';
 import ArticleCover from '../components/ArticleCover';
 import { useBlogArticles } from '../lib/blogStore';
-import NativeAdCard from '../components/NativeAdCard';
+import ArticleBodyWithAd from '../components/ArticleBodyWithAd';
 import AdSenseUnit from '../components/AdSenseUnit';
 import NotFoundPage from './NotFoundPage';
 import { useSettings } from '../lib/settingsContext';
 import { canRenderAdSlot } from '../lib/adsConfig';
-import { sanitizeHtml } from '../lib/sanitize';
 import { SITE_BASE_URL } from '../lib/siteUrl';
 import { keywordsToMetaContent, normalizeKeywords } from '../lib/blogKeywords';
 
@@ -146,14 +145,8 @@ export default function ArticlePage() {
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <div className={`grid gap-8 ${showSidebarAd ? 'lg:grid-cols-[minmax(0,1fr)_300px]' : ''}`}>
             <div className={`min-w-0 ${showSidebarAd ? 'lg:max-w-3xl' : 'mx-auto max-w-3xl'}`}>
-              {/* CMS body — must keep real <h2>/<h3> tags for crawlers */}
-              <div
-                className="prose-article min-w-0 max-w-full overflow-x-clip"
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
-              />
-
-              {/* In-article ad: mobile-bounded, CLS-reserved, compact on small screens */}
-              <NativeAdCard />
+              {/* CMS body + live In-Article ad (gated by adsense_enabled / slot from Supabase) */}
+              <ArticleBodyWithAd content={article.content} />
 
               <aside className="mt-10 rounded-2xl bg-trust-50 p-5 ring-1 ring-trust-100 sm:p-6">
                 <h2 className="font-display text-lg font-bold text-slate-900">Un devis à analyser ?</h2>

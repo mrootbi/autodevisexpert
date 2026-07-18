@@ -30,6 +30,7 @@ interface AdSenseUnitProps {
 
 const SLOT_FORMAT: Record<AdSlotKey, string> = {
   header: 'horizontal',
+  /** Google In-article unit — paired with data-ad-layout="in-article". */
   inArticle: 'fluid',
   sidebar: 'vertical',
 };
@@ -136,6 +137,8 @@ function AdSenseUnitLive({
     };
   }, [slot, slotId, client, onUnfilled]);
 
+  const isInArticle = slot === 'inArticle';
+
   return (
     <div
       ref={containerRef}
@@ -147,11 +150,16 @@ function AdSenseUnitLive({
     >
       <ins
         className="adsbygoogle block w-full max-w-full overflow-hidden"
-        style={{ display: 'block', width: '100%', maxWidth: '100%', overflow: 'hidden' }}
+        style={
+          isInArticle
+            ? { display: 'block', textAlign: 'center', width: '100%', maxWidth: '100%', overflow: 'hidden' }
+            : { display: 'block', width: '100%', maxWidth: '100%', overflow: 'hidden' }
+        }
         data-ad-client={client}
         data-ad-slot={slotId}
         data-ad-format={SLOT_FORMAT[slot]}
-        data-full-width-responsive="true"
+        data-ad-layout={isInArticle ? 'in-article' : undefined}
+        data-full-width-responsive={isInArticle ? undefined : 'true'}
       />
     </div>
   );
