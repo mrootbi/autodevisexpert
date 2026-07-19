@@ -88,14 +88,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-slate-50 py-12 sm:py-16">
+      <LastArticles />
+
+      <section className="border-t border-slate-200 bg-slate-50 py-12 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <NativeAdCard />
           <RecentAnalyses className="mt-12" title="Dernières analyses" limit={10} />
         </div>
       </section>
-
-      <LastArticles />
     </>
   );
 }
