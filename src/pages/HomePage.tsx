@@ -184,7 +184,7 @@ function Hero() {
 
 function LastArticles() {
   const [articles, loading] = useBlogArticles();
-  const top3 = articles.slice(0, 3);
+  const latest = articles.slice(0, 6);
 
   return (
     <section className="border-t border-slate-200 bg-white py-12 sm:py-16" aria-labelledby="last-articles-heading">
@@ -205,11 +205,11 @@ function LastArticles() {
         </div>
         {loading ? (
           <p className="text-sm text-slate-500">Chargement…</p>
-        ) : top3.length === 0 ? (
+        ) : latest.length === 0 ? (
           <p className="text-sm text-slate-500">Aucun article publié.</p>
         ) : (
-          <div className="grid gap-6 md:grid-cols-3">
-            {top3.map((a) => (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {latest.map((a) => (
               <ArticleTeaser key={a.slug} article={a} />
             ))}
           </div>
