@@ -115,6 +115,7 @@ function MarkdownText({ children }: { children: string }) {
       remarkPlugins={[remarkGfm]}
       urlTransform={safeMarkdownUrl}
       components={{
+        ...reportMarkdownHeadingComponents,
         p: ({ children: c }) => <span className="leading-relaxed">{c}</span>,
         strong: ({ children: c }) => (
           <strong className="font-bold text-slate-900">{c}</strong>

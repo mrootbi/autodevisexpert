@@ -17,6 +17,7 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 const STATIC_ROUTES = [
   { path: '/', priority: '1.0', changefreq: 'weekly' },
   { path: '/blog', priority: '0.8', changefreq: 'weekly' },
+  { path: '/devis-analyses', priority: '0.7', changefreq: 'daily' },
   { path: '/contact', priority: '0.5', changefreq: 'monthly' },
   { path: '/mentions-legales', priority: '0.3', changefreq: 'yearly' },
   { path: '/politique-de-confidentialite', priority: '0.3', changefreq: 'yearly' },

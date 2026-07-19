@@ -79,6 +79,7 @@ function build_sitemap_xml(string $siteBase, array $articles, array $reports = [
   $static = [
     ['/', '1.0', 'weekly'],
     ['/blog', '0.8', 'weekly'],
+    ['/devis-analyses', '0.7', 'daily'],
     ['/contact', '0.5', 'monthly'],
     ['/mentions-legales', '0.3', 'yearly'],
     ['/politique-de-confidentialite', '0.3', 'yearly'],

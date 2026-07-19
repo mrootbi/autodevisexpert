@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 const STATIC_ROUTES = [
   { path: '/', priority: '1.0', changefreq: 'weekly' },
   { path: '/blog', priority: '0.8', changefreq: 'weekly' },
+  { path: '/devis-analyses', priority: '0.7', changefreq: 'daily' },
   { path: '/contact', priority: '0.5', changefreq: 'monthly' },
   { path: '/mentions-legales', priority: '0.3', changefreq: 'yearly' },
   { path: '/politique-de-confidentialite', priority: '0.3', changefreq: 'yearly' },
@@ -79,6 +80,67 @@ ${entries.join('\n')}
  * Serve `/sitemap.xml` with Content-Type: application/xml during `vite` / `vite preview`,
  * rebuilding live from Supabase `blog_articles` + `quote_reports` (not a stale cache).
  */
+function isValidAdsensePublisherId(publisherId: string): boolean {
+  const id = publisherId.trim();
+  if (!id || id === 'pub-0000000000000000') return false;
+  return /^(ca-)?pub-\d{10,20}$/.test(id);
+}
+
+/** Serve `/ads.txt` locally from the same live Supabase publisher ID as production. */
+function dynamicAdsTxtPlugin(env: Record<string, string>): Plugin {
+  const attach = (server: ViteDevServer | PreviewServer) => {
+    server.middlewares.use(async (req, res, next) => {
+      const path = req.url?.split('?')[0];
+      if (path !== '/ads.txt') {
+        next();
+        return;
+      }
+
+      const supabaseUrl = (env.VITE_SUPABASE_URL || '').replace(/\/$/, '');
+      const anonKey = env.VITE_SUPABASE_ANON_KEY || '';
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+
+      if (!supabaseUrl || !anonKey) {
+        res.statusCode = 200;
+        res.end('');
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${supabaseUrl}/rest/v1/app_settings?key=eq.adsense_publisher_id&select=value`,
+          {
+            headers: {
+              apikey: anonKey,
+              Authorization: `Bearer ${anonKey}`,
+              Accept: 'application/json',
+            },
+          },
+        );
+        const rows = response.ok ? ((await response.json()) as { value?: string }[]) : [];
+        const publisherId = (rows[0]?.value || '').trim();
+        if (!isValidAdsensePublisherId(publisherId)) {
+          res.statusCode = 200;
+          res.end('');
+          return;
+        }
+        const pubId = publisherId.startsWith('ca-') ? publisherId.slice(3) : publisherId;
+        res.statusCode = 200;
+        res.end(`google.com, ${pubId}, DIRECT, f08c47fec0942fa0\n`);
+      } catch {
+        res.statusCode = 200;
+        res.end('');
+      }
+    });
+  };
+
+  return {
+    name: 'dynamic-ads-txt',
+    configureServer: attach,
+    configurePreviewServer: attach,
+  };
+}
+
 function dynamicSitemapPlugin(env: Record<string, string>): Plugin {
   const attach = (server: ViteDevServer | PreviewServer) => {
     server.middlewares.use(async (req, res, next) => {
@@ -182,7 +244,7 @@ function dynamicSitemapPlugin(env: Record<string, string>): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
-    plugins: [react(), dynamicSitemapPlugin(env)],
+    plugins: [react(), dynamicSitemapPlugin(env), dynamicAdsTxtPlugin(env)],
     build: {
       rollupOptions: {
         output: {

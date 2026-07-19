@@ -36,6 +36,7 @@ import ShareResultButton from './ShareResultButton';
 import PriceComparisonLines from './PriceComparisonLines';
 import AlertModal from './AlertModal';
 import { sanitizeUserText, safeMarkdownUrl, MAX_USER_TEXT_CHARS } from '../lib/sanitize';
+import { reportMarkdownHeadingComponents } from '../lib/reportMarkdown';
 
 const emptyVehicle: VehicleInfo = { marque: '', modele: '', version: '', moteur: '', kilometrage: '' };
 const MAX_UPLOAD_BYTES = 3 * 1024 * 1024; // 3 MB — matches edge payload limits
@@ -603,7 +604,11 @@ function ExpertAdvice({ result }: { result: DevisResult }) {
         </div>
       </div>
       <div className="prose-article mt-5">
-        <ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={safeMarkdownUrl}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          urlTransform={safeMarkdownUrl}
+          components={reportMarkdownHeadingComponents}
+        >
           {result.expertAdvice.body}
         </ReactMarkdown>
       </div>
