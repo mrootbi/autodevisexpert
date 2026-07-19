@@ -48,7 +48,7 @@ export default function AlertModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
           aria-label="Fermer la fenêtre"
         >
           <X className="h-5 w-5" />

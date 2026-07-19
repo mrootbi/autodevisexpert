@@ -107,7 +107,7 @@ export default function AdminPage() {
               </SidebarItem>
             </nav>
             <div className="border-t border-slate-100 p-3">
-              <Link to="/" className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-500 hover:text-trust-700">
+              <Link to="/" className="flex min-h-[44px] items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-slate-500 hover:text-trust-700">
                 <ExternalLink className="h-3 w-3" /> Voir le site public
               </Link>
               <button
@@ -115,7 +115,7 @@ export default function AdminPage() {
                   logout();
                   setAuthed(false);
                 }}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-action-redDark hover:bg-action-red/5"
+                className="flex min-h-[44px] w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-action-redDark hover:bg-action-red/5"
               >
                 <LogOut className="h-3 w-3" /> Déconnexion
               </button>
@@ -149,7 +149,7 @@ function SidebarItem({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
+      className={`flex min-h-[44px] items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
         active ? 'bg-trust-50 text-trust-700' : 'text-slate-600 hover:bg-slate-50 hover:text-trust-700'
       }`}
     >
@@ -767,7 +767,7 @@ function ApiSettings() {
               <button
                 type="button"
                 onClick={() => setShowAdminCurrentPass((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-slate-400 hover:text-slate-600"
                 aria-label={showAdminCurrentPass ? 'Masquer' : 'Afficher'}
               >
                 {showAdminCurrentPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -821,7 +821,7 @@ function ApiSettings() {
               <button
                 type="button"
                 onClick={() => setShowAdminPass((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-slate-400 hover:text-slate-600"
                 aria-label={showAdminPass ? 'Masquer' : 'Afficher'}
               >
                 {showAdminPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -934,7 +934,7 @@ function ApiSettings() {
                     <button
                       type="button"
                       onClick={() => toggleKeyVisibility(row.id)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
+                      className="absolute right-0 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-slate-400 transition hover:text-slate-600"
                       aria-label={visible ? `Masquer la clé ${index + 1}` : `Afficher la clé ${index + 1}`}
                     >
                       {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

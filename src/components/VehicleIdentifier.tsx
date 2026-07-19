@@ -333,7 +333,7 @@ function CascadingSelectRow({
       <div className="flex items-stretch gap-3">
         <span
           aria-hidden
-          className="flex h-[42px] w-[42px] flex-shrink-0 items-center justify-center rounded-xl bg-trust-700 text-sm font-bold text-white shadow-sm"
+          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-trust-700 text-sm font-bold text-white shadow-sm"
         >
           {step}
         </span>
@@ -426,7 +426,7 @@ function ManualTab({ onIdentified, initialVehicle }: { onIdentified: (v: Vehicle
   };
 
   const selectClassName =
-    'input-field min-h-[42px] w-full cursor-pointer appearance-none bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400';
+    'input-field min-h-[48px] w-full cursor-pointer appearance-none bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400';
 
   return (
     <div className="space-y-5">

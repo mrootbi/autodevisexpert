@@ -65,12 +65,12 @@ export default function Footer() {
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white">
             <BookOpen className="h-4 w-4" aria-hidden="true" /> Outil & Blog
           </div>
-          <ul className="space-y-2 text-sm">
-            <li><Link to="/" className="hover:text-white">Accueil</Link></li>
-            <li><Link to="/#outil" className="hover:text-white">Analyser un devis</Link></li>
-            <li><Link to="/devis-analyses" className="hover:text-white">Dernières analyses</Link></li>
-            <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
-            <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
+          <ul className="text-sm">
+            <li><Link to="/" className="inline-flex min-h-[44px] items-center hover:text-white">Accueil</Link></li>
+            <li><Link to="/#outil" className="inline-flex min-h-[44px] items-center hover:text-white">Analyser un devis</Link></li>
+            <li><Link to="/devis-analyses" className="inline-flex min-h-[44px] items-center hover:text-white">Dernières analyses</Link></li>
+            <li><Link to="/blog" className="inline-flex min-h-[44px] items-center hover:text-white">Blog</Link></li>
+            <li><Link to="/contact" className="inline-flex min-h-[44px] items-center hover:text-white">Contact</Link></li>
           </ul>
         </div>
 
@@ -78,10 +78,10 @@ export default function Footer() {
           <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white">
             <Shield className="h-4 w-4" aria-hidden="true" /> Légal
           </div>
-          <ul className="space-y-2 text-sm">
-            <li><Link to="/mentions-legales" className="hover:text-white">Mentions Légales</Link></li>
-            <li><Link to="/politique-de-confidentialite" className="hover:text-white">Politique de Confidentialité</Link></li>
-            <li><Link to="/cgu" className="hover:text-white">CGU</Link></li>
+          <ul className="text-sm">
+            <li><Link to="/mentions-legales" className="inline-flex min-h-[44px] items-center hover:text-white">Mentions Légales</Link></li>
+            <li><Link to="/politique-de-confidentialite" className="inline-flex min-h-[44px] items-center hover:text-white">Politique de Confidentialité</Link></li>
+            <li><Link to="/cgu" className="inline-flex min-h-[44px] items-center hover:text-white">CGU</Link></li>
           </ul>
         </div>
 
@@ -94,7 +94,7 @@ export default function Footer() {
             <li>Prix basés sur le marché français</li>
             <li>Aucun lien commercial avec un garage</li>
           </ul>
-          <a href="mailto:contact@autodevisexpert.com" className="mt-4 inline-flex items-center gap-2 text-sm text-trust-300 hover:text-white">
+          <a href="mailto:contact@autodevisexpert.com" className="mt-2 inline-flex min-h-[44px] items-center gap-2 text-sm text-trust-300 hover:text-white">
             <Mail className="h-4 w-4" /> contact@autodevisexpert.com
           </a>
         </div>
