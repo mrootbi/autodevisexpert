@@ -58,9 +58,9 @@ export default function AlertModal({
           <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
             <Users className="h-7 w-7" />
           </span>
-          <h2 id="alert-modal-title" className="mt-4 font-display text-xl font-bold text-slate-900">
+          <p id="alert-modal-title" className="mt-4 font-display text-xl font-bold text-slate-900">
             {title}
-          </h2>
+          </p>
           <p className="mt-3 text-sm leading-relaxed text-slate-600">{message}</p>
         </div>
 

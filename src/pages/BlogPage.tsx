@@ -121,9 +121,9 @@ export default function BlogPage() {
                       </div>
                       <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
                         <span className="text-xs font-semibold uppercase tracking-wider text-trust-600">{a.category}</span>
-                        <h3 className="mt-1.5 font-display text-base font-bold leading-snug text-slate-900 group-hover:text-trust-700 sm:text-lg">
+                        <h2 className="mt-1.5 font-display text-base font-bold leading-snug text-slate-900 group-hover:text-trust-700 sm:text-lg">
                           {a.title}
-                        </h3>
+                        </h2>
                         <p className="mt-2 line-clamp-3 flex-1 text-sm text-slate-600">{a.excerpt}</p>
                         <div className="mt-4 flex min-h-[44px] items-center justify-between text-xs text-slate-500">
                           <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {a.readingTime}</span>

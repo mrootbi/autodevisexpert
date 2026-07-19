@@ -82,7 +82,9 @@ export default function ContactPage() {
               {sent ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center animate-fadeIn">
                   <CheckCircle2 className="h-12 w-12 text-action-green" />
-                  <h2 className="mt-4 font-display text-xl font-bold text-slate-900">Message envoyé</h2>
+                  <p className="mt-4 font-display text-xl font-bold text-slate-900" role="status">
+                    Message envoyé
+                  </p>
                   <p className="mt-1 max-w-md text-slate-500">
                     Merci. Nous avons bien reçu votre message et reviendrons vers vous à l&apos;adresse
                     indiquée dans les meilleurs délais.
@@ -202,7 +204,7 @@ function ContactBlock({ icon, title, children }: { icon: React.ReactNode; title:
   return (
     <div className="card p-5">
       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-trust-50 text-trust-700">{icon}</span>
-      <h2 className="mt-3 text-base font-semibold text-slate-900">{title}</h2>
+      <div className="mt-3 text-base font-semibold text-slate-900">{title}</div>
       <div className="mt-1 text-sm text-slate-600">{children}</div>
     </div>
   );

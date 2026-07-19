@@ -62,9 +62,9 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white">
-            <BookOpen className="h-4 w-4" /> Outil & Blog
-          </h4>
+          <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white">
+            <BookOpen className="h-4 w-4" aria-hidden="true" /> Outil & Blog
+          </div>
           <ul className="space-y-2 text-sm">
             <li><Link to="/#outil" className="hover:text-white">Analyser un devis</Link></li>
             <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
@@ -74,9 +74,9 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white">
-            <Shield className="h-4 w-4" /> Légal
-          </h4>
+          <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white">
+            <Shield className="h-4 w-4" aria-hidden="true" /> Légal
+          </div>
           <ul className="space-y-2 text-sm">
             <li><Link to="/mentions-legales" className="hover:text-white">Mentions Légales</Link></li>
             <li><Link to="/politique-de-confidentialite" className="hover:text-white">Politique de Confidentialité</Link></li>
@@ -86,9 +86,9 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white">
-            <FileText className="h-4 w-4" /> Infos
-          </h4>
+          <div className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white">
+            <FileText className="h-4 w-4" aria-hidden="true" /> Infos
+          </div>
           <ul className="space-y-2 text-sm text-slate-400">
             <li>Comparateur indépendant</li>
             <li>Prix basés sur le marché français</li>
