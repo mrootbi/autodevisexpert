@@ -4,6 +4,7 @@ import SEO, { truncateMetaDescription } from '../components/SEO';
 import ArticleCover from '../components/ArticleCover';
 import { useBlogArticles } from '../lib/blogStore';
 import ArticleBodyWithAd from '../components/ArticleBodyWithAd';
+import ArticleShareButtons from '../components/ArticleShareButtons';
 import AdSenseUnit from '../components/AdSenseUnit';
 import NotFoundPage from './NotFoundPage';
 import { useSettings } from '../lib/settingsContext';
@@ -165,8 +166,21 @@ export default function ArticlePage() {
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <div className={`grid gap-8 ${showSidebarAd ? 'lg:grid-cols-[minmax(0,1fr)_300px]' : ''}`}>
             <div className={`min-w-0 ${showSidebarAd ? 'lg:max-w-3xl' : 'mx-auto max-w-3xl'}`}>
+              <ArticleShareButtons
+                title={article.title}
+                path={`/blog/${article.slug}`}
+                className="mb-8 border-b border-slate-200 pb-6"
+              />
+
               {/* CMS body + live In-Article ad (gated by adsense_enabled / slot from Supabase) */}
               <ArticleBodyWithAd content={article.content} title={article.title} />
+
+              <ArticleShareButtons
+                title={article.title}
+                path={`/blog/${article.slug}`}
+                variant="compact"
+                className="mt-10 border-t border-slate-200 pt-6"
+              />
 
               <aside className="mt-10 rounded-2xl bg-trust-50 p-5 ring-1 ring-trust-100 sm:p-6">
                 <h2 className="font-display text-lg font-bold text-slate-900">Un devis à analyser ?</h2>
