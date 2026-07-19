@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { SITE_BASE_URL as BASE_URL } from '../lib/siteUrl';
+import { DEFAULT_TWITTER, SITE_NAME } from '../lib/socialMeta';
 
 interface SEOProps {
   title: string;
@@ -14,10 +15,9 @@ interface SEOProps {
   jsonLd?: Record<string, unknown>;
 }
 
-const SITE = 'AutoDevis Expert';
-const DEFAULT_DESC =
-  "Analysez votre devis garagiste, comparez le prix réel et obtenez l'avis d'un expert mécanicien. Évitez les marges gonflées et les pièces surfacturées.";
-const DEFAULT_OG_IMAGE = `${BASE_URL}/og-default.png`;
+const SITE = SITE_NAME;
+const DEFAULT_DESC = DEFAULT_TWITTER.description;
+const DEFAULT_OG_IMAGE = DEFAULT_TWITTER.images[0];
 /** Google typically truncates meta descriptions around 150–160 characters. */
 const META_DESC_MAX = 155;
 
@@ -76,6 +76,34 @@ function normalizeKeywordsMeta(keywords?: string | string[]): string {
   return out.join(', ');
 }
 
+/** Apply the full Twitter Card suite (name + property) — required by most SEO auditors. */
+function applyTwitterCard(opts: {
+  title: string;
+  description: string;
+  imageUrl: string;
+  imageAlt: string;
+  url: string;
+}) {
+  const { title, description, imageUrl, imageAlt, url } = opts;
+  const card = DEFAULT_TWITTER.card;
+
+  setMeta('name', 'twitter:card', card);
+  setMeta('name', 'twitter:site', DEFAULT_TWITTER.site);
+  setMeta('name', 'twitter:title', title);
+  setMeta('name', 'twitter:description', description);
+  setMeta('name', 'twitter:image', imageUrl);
+  setMeta('name', 'twitter:image:src', imageUrl);
+  setMeta('name', 'twitter:image:alt', imageAlt);
+  setMeta('name', 'twitter:url', url);
+
+  setMeta('property', 'twitter:card', card);
+  setMeta('property', 'twitter:site', DEFAULT_TWITTER.site);
+  setMeta('property', 'twitter:title', title);
+  setMeta('property', 'twitter:description', description);
+  setMeta('property', 'twitter:image', imageUrl);
+  setMeta('property', 'twitter:image:alt', imageAlt);
+}
+
 export default function SEO({
   title,
   description = DEFAULT_DESC,
@@ -92,6 +120,7 @@ export default function SEO({
   const keywordsContent = normalizeKeywordsMeta(keywords);
   const seoKey = canonicalPath;
   const robots = noIndex ? 'noindex, nofollow' : 'index, follow';
+  const imageAlt = `${SITE} — ${title}`.slice(0, 120);
 
   useEffect(() => {
     document.title = fullTitle;
@@ -111,16 +140,19 @@ export default function SEO({
     setMeta('property', 'og:description', metaDescription);
     setMeta('property', 'og:url', canonical);
     setMeta('property', 'og:image', imageUrl);
+    setMeta('property', 'og:image:alt', imageAlt);
+    setMeta('property', 'og:image:secure_url', imageUrl);
+    setMeta('property', 'og:image:type', 'image/png');
+    setMeta('property', 'og:image:width', '1200');
+    setMeta('property', 'og:image:height', '630');
 
-    setMeta('name', 'twitter:card', 'summary_large_image');
-    setMeta('name', 'twitter:title', fullTitle);
-    setMeta('name', 'twitter:description', metaDescription);
-    setMeta('name', 'twitter:image', imageUrl);
-    setMeta('name', 'twitter:url', canonical);
-    setMeta('property', 'twitter:card', 'summary_large_image');
-    setMeta('property', 'twitter:title', fullTitle);
-    setMeta('property', 'twitter:description', metaDescription);
-    setMeta('property', 'twitter:image', imageUrl);
+    applyTwitterCard({
+      title: fullTitle || DEFAULT_TWITTER.title,
+      description: metaDescription || DEFAULT_TWITTER.description,
+      imageUrl: imageUrl || DEFAULT_TWITTER.images[0],
+      imageAlt: imageAlt || DEFAULT_TWITTER.imageAlt,
+      url: canonical,
+    });
 
     let link = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!link) {
@@ -142,9 +174,9 @@ export default function SEO({
       if (ldEl && ldEl.parentNode) ldEl.parentNode.removeChild(ldEl);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fullTitle, metaDescription, canonical, imageUrl, keywordsContent, robots, seoKey, JSON.stringify(jsonLd)]);
+  }, [fullTitle, metaDescription, canonical, imageUrl, imageAlt, keywordsContent, robots, seoKey, JSON.stringify(jsonLd)]);
 
   return null;
 }
 
-export { DEFAULT_DESC, DEFAULT_OG_IMAGE, SITE as SITE_NAME, META_DESC_MAX };
+export { DEFAULT_DESC, DEFAULT_OG_IMAGE, SITE as SITE_NAME, META_DESC_MAX, DEFAULT_TWITTER };

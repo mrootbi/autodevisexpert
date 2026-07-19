@@ -5,6 +5,7 @@ import NativeAdCard from '../components/NativeAdCard';
 import RecentAnalyses from '../components/RecentAnalyses';
 import { useBlogArticles } from '../lib/blogStore';
 import { SITE_BASE_URL } from '../lib/siteUrl';
+import { SOCIAL_SAME_AS } from '../lib/socialMeta';
 import ArticleCover from '../components/ArticleCover';
 import type { BlogArticle } from '../lib/types';
 
@@ -49,10 +50,12 @@ export default function HomePage() {
           publisher: {
             '@type': 'Organization',
             name: 'AutoDevis Expert',
+            url: `${SITE_BASE_URL}/`,
             logo: {
               '@type': 'ImageObject',
               url: `${SITE_BASE_URL}/og-default.png`,
             },
+            sameAs: [...SOCIAL_SAME_AS],
           },
         }}
       />
