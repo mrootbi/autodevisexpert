@@ -56,10 +56,13 @@ export default function AdSenseUnit({ slot, placement, className = '' }: AdSense
   const slotId = getSlotId(adsConfig, slot);
   const client = toAdClient(adsConfig.publisherId);
 
-  // Re-arm the unit when admin toggles ads or updates slot/publisher IDs.
+  // Re-arm the unit when admin toggles ads/slots, or on SPA route change —
+  // Google's SPA guidance treats each client-side navigation as a new page
+  // view, so a stale "unfilled" flag from the previous route must not hide
+  // an otherwise fillable slot on the new one.
   useEffect(() => {
     setUnfilled(false);
-  }, [adsConfig.enabled, adsConfig.publisherId, slotId, slot]);
+  }, [adsConfig.enabled, adsConfig.publisherId, slotId, slot, pathname]);
 
   if (loading || pathname.startsWith('/mouadbi')) {
     return null;
@@ -76,7 +79,12 @@ export default function AdSenseUnit({ slot, placement, className = '' }: AdSense
 
   return (
     <AdSenseUnitLive
-      key={`${slot}-${slotId}-${client}`}
+      // Keying on `pathname` forces a fresh <ins> + ad request per SPA "virtual
+      // page view" (React Router keeps the same component instance mounted
+      // across param-only changes like /blog/a → /blog/b, and the header slot
+      // lives in the persistent Layout, so without this the same ad request
+      // would otherwise be reused for the whole session).
+      key={`${slot}-${slotId}-${client}-${pathname}`}
       slot={slot}
       slotId={slotId}
       client={client}
