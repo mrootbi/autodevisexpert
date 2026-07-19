@@ -24,8 +24,8 @@ export default function PriceComparisonLines({
 }: PriceComparisonLinesProps) {
   return (
     <>
-      {/* Mobile card stack */}
-      <ul className="divide-y divide-slate-100 sm:hidden" aria-label="Comparatif des postes">
+      {/* Mobile card stack — a real table prints more cleanly, so force it below. */}
+      <ul className="divide-y divide-slate-100 sm:hidden print:hidden" aria-label="Comparatif des postes">
         {lines.map((item, i) => {
           const delta = Math.round(
             ((item.prixGaragiste - item.prixReel) / Math.max(item.prixGaragiste, 1)) * 100,
@@ -70,8 +70,8 @@ export default function PriceComparisonLines({
         </li>
       </ul>
 
-      {/* Desktop / tablet table */}
-      <div className="hidden overflow-x-auto sm:block">
+      {/* Desktop / tablet table — also forced visible when printing, even from a mobile viewport. */}
+      <div className="hidden overflow-x-auto sm:block print:block">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">
             Détails des pièces et réparations du devis — prix garagiste vs prix réel

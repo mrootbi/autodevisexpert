@@ -18,7 +18,7 @@ function XIcon({ className }: { className?: string }) {
 
 export default function Footer() {
   return (
-    <footer className="mt-20 border-t border-slate-200 bg-trust-950 text-slate-300">
+    <footer className="mt-20 border-t border-slate-200 bg-trust-950 text-slate-300 print:hidden">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 py-12 sm:px-6 md:grid-cols-4 lg:px-8">
         <div>
           <Link to="/" className="flex items-center gap-2">

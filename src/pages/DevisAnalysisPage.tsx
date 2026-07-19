@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ArrowLeft, Calendar, Lightbulb, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Calendar, Lightbulb, ShieldCheck, Printer } from 'lucide-react';
 import SEO from '../components/SEO';
 import RecentAnalyses from '../components/RecentAnalyses';
 import AdSenseUnit from '../components/AdSenseUnit';
@@ -127,43 +127,53 @@ export default function DevisAnalysisPage() {
         }}
       />
 
-      <article>
-        <header className="border-b border-slate-200 bg-gradient-to-b from-trust-950 to-trust-900 py-10 text-white sm:py-14">
+      <article className="print:report-print">
+        <header className="border-b border-slate-200 bg-gradient-to-b from-trust-950 to-trust-900 py-10 text-white sm:py-14 print:border-b-2 print:border-trust-700 print:bg-none print:bg-white print:py-0 print:pb-6 print:text-slate-900">
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-            <Link
-              to="/"
-              className="inline-flex min-h-[44px] items-center gap-2 text-sm text-white/80 hover:text-white"
-            >
-              <ArrowLeft className="h-4 w-4" /> Retour au comparateur
-            </Link>
-            <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-trust-200">
+            <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
+              <Link
+                to="/"
+                className="inline-flex min-h-[44px] items-center gap-2 text-sm text-white/80 hover:text-white"
+              >
+                <ArrowLeft className="h-4 w-4" /> Retour au comparateur
+              </Link>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white shadow-sm backdrop-blur transition hover:border-white/40 hover:bg-white/20 active:scale-[0.98]"
+              >
+                <Printer className="h-4 w-4" />
+                Imprimer / Sauvegarder en PDF
+              </button>
+            </div>
+            <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-trust-200 print:mt-0 print:text-trust-700">
               Rapport anonyme · Programmatic SEO
             </p>
             <h1
-              className="mt-2 font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-4xl"
+              className="mt-2 font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-4xl print:text-slate-900"
               title={fullHeadline !== h1 ? fullHeadline : undefined}
             >
               {h1}
             </h1>
-            <p className="mt-3 max-w-2xl text-base text-slate-200 sm:text-lg">
+            <p className="mt-3 max-w-2xl text-base text-slate-200 sm:text-lg print:text-slate-600">
               Comparatif indicatif des postes de réparation pour {vehicleLabel} : prix annoncé par un
               garagiste vs estimation du marché français indépendant.
             </p>
-            <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-white/80 sm:gap-4">
+            <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-white/80 sm:gap-4 print:text-slate-600">
               <span className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" /> {formatDate(report.createdAt)}
               </span>
               {report.moteur && <span>{report.moteur}</span>}
               {report.kilometrage && <span>{report.kilometrage} km</span>}
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-semibold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-semibold print:bg-trust-50 print:text-trust-700">
                 <ShieldCheck className="h-3 w-3" /> Sans données personnelles
               </span>
             </div>
           </div>
         </header>
 
-        <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
-          <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
+        <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 print:max-w-full print:px-0 print:py-6">
+          <div className="grid gap-3 sm:grid-cols-3 sm:gap-4 print:break-inside-avoid">
             <StatCard label="Devis garagiste" value={formatEuro(report.totalGaragiste)} tone="red" />
             <StatCard label="Prix réel marché" value={formatEuro(report.totalReel)} tone="green" />
             <StatCard
@@ -175,7 +185,10 @@ export default function DevisAnalysisPage() {
 
           <AdSenseUnit slot="inArticle" placement="results" className="mt-8 rounded-xl" />
 
-          <section className="card mt-8 overflow-hidden" aria-labelledby="detail-postes-heading">
+          <section
+            className="card mt-8 overflow-hidden print:mt-6 print:break-inside-avoid print:border print:border-slate-300 print:shadow-none"
+            aria-labelledby="detail-postes-heading"
+          >
             <header className="border-b border-slate-200 px-4 py-4 sm:px-6">
               <h2 id="detail-postes-heading" className="font-display text-lg font-bold text-slate-900">
                 Détail des postes — {vehicleLabel}
@@ -199,9 +212,12 @@ export default function DevisAnalysisPage() {
 
           <AdSenseUnit slot="inArticle" placement="preVerdict" className="my-8 rounded-xl" />
 
-          <section className="card p-6 sm:p-8" aria-labelledby="expert-advice-heading">
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-trust-100">
+          <section
+            className="card p-6 sm:p-8 print:mt-6 print:break-inside-avoid print:border print:border-slate-300 print:p-0 print:shadow-none"
+            aria-labelledby="expert-advice-heading"
+          >
+            <div className="flex items-center gap-3 print:p-5">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-trust-100 print:hidden">
                 <Lightbulb className="h-5 w-5 text-trust-700" />
               </span>
               <div>
@@ -213,7 +229,7 @@ export default function DevisAnalysisPage() {
                 </h2>
               </div>
             </div>
-            <div className="prose-article mt-5">
+            <div className="prose-article mt-5 print:px-5 print:pb-5">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 urlTransform={safeMarkdownUrl}
@@ -223,13 +239,16 @@ export default function DevisAnalysisPage() {
               </ReactMarkdown>
             </div>
             {report.expertAdvice.recommendation && (
-              <RecommendationCard recommendation={report.expertAdvice.recommendation} />
+              <RecommendationCard
+                recommendation={report.expertAdvice.recommendation}
+                className="print:mx-5 print:mb-5"
+              />
             )}
           </section>
 
-          <ShareResultButton sharePath={canonicalPath} className="mt-8" />
+          <ShareResultButton sharePath={canonicalPath} className="mt-8 print:hidden" />
 
-          <div className="mt-10 rounded-2xl bg-trust-50 p-6 ring-1 ring-trust-100">
+          <div className="mt-10 rounded-2xl bg-trust-50 p-6 ring-1 ring-trust-100 print:hidden">
             <p className="font-display text-lg font-bold text-slate-900">Un devis à faire vérifier ?</p>
             <p className="mt-1 text-sm text-slate-600">
               Déposez-le dans le comparateur : analyse anonymisée, sans création de compte.
@@ -240,11 +259,17 @@ export default function DevisAnalysisPage() {
           </div>
 
           <RecentAnalyses
-            className="mt-14"
+            className="mt-14 print:hidden"
             title={`Autres analyses proches de ${vehicleLabel}`}
             subtitle="Rapports anonymes du comparateur — pour comparer d'autres devis similaires."
             excludePathSlug={report.pathSlug}
           />
+
+          <p className="mt-10 hidden text-xs text-slate-400 print:block">
+            {SITE_BASE_URL.replace('https://', '')}{canonicalPath} · Généré le{' '}
+            {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} ·
+            Estimation indicative, ne remplace pas un diagnostic en atelier.
+          </p>
         </div>
       </article>
     </>

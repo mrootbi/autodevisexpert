@@ -146,6 +146,37 @@
   }
 }
 
+/* Devis report — clean A4 print / "Save as PDF" layout. */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  .report-print {
+    color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .report-print table {
+    page-break-inside: auto;
+  }
+  .report-print tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .report-print h2,
+  .report-print h3 {
+    break-after: avoid;
+  }
+}
+
 @keyframes geminiRowIn {
   from {
     opacity: 0;

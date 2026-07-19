@@ -150,7 +150,7 @@ function AdSenseUnitLive({
   return (
     <div
       ref={containerRef}
-      className={`adsense-unit box-border w-full max-w-full overflow-hidden ${SLOT_MIN_HEIGHT[slot]} ${className}`}
+      className={`adsense-unit print:hidden box-border w-full max-w-full overflow-hidden ${SLOT_MIN_HEIGHT[slot]} ${className}`}
       data-ad-placement={placement}
       data-adsense-enabled-key={ADSENSE_DB_KEYS.enabled}
       data-adsense-slot-key={AD_SLOT_TO_DB_KEY[slot]}
