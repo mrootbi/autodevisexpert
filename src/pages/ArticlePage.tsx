@@ -104,6 +104,7 @@ export default function ArticlePage() {
               article={article}
               className="h-full w-full"
               alt={`Couverture article — ${article.title}`}
+              priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-trust-950/90 via-trust-900/55 to-trust-800/35" />
           </div>

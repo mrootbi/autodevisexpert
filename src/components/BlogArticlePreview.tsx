@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Calendar, Clock, X } from 'lucide-react';
 import { BlogArticle } from '../lib/types';
-import { sanitizeHtml } from '../lib/sanitize';
+import { prepareArticleHtml } from '../lib/articleHtml';
 import ArticleCover from './ArticleCover';
 
 interface BlogArticlePreviewProps {
@@ -52,7 +52,8 @@ export default function BlogArticlePreview({ open, article, onClose }: BlogArtic
             </div>
             <div className="relative px-4 py-10 sm:px-8 sm:py-12">
               <span className="text-xs font-semibold uppercase tracking-wider text-white/80">{article.category}</span>
-              <h1 className="mt-2 font-display text-2xl font-extrabold leading-tight sm:text-3xl">{article.title || 'Sans titre'}</h1>
+              {/* Preview dialog title — kept off the h1 map since this modal is never the live public DOM. */}
+              <p className="mt-2 font-display text-2xl font-extrabold leading-tight sm:text-3xl">{article.title || 'Sans titre'}</p>
               <p className="mt-3 text-base text-white/90">{article.excerpt || 'Aucun extrait renseigné.'}</p>
               <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-white/80">
                 <span className="flex items-center gap-1"><Calendar className="h-4 w-4" /> {formatDate(article.date)}</span>
@@ -66,7 +67,9 @@ export default function BlogArticlePreview({ open, article, onClose }: BlogArtic
             {article.content.trim() ? (
               <div
                 className="prose-article"
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
+                dangerouslySetInnerHTML={{
+                  __html: prepareArticleHtml(article.content, `Illustration — ${article.title}`),
+                }}
               />
             ) : (
               <p className="text-sm italic text-slate-400">Le contenu de l&apos;article est vide.</p>

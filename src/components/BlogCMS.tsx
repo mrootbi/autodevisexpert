@@ -477,7 +477,13 @@ export default function BlogCMS() {
                 <p className="mt-0.5 text-xs text-slate-400">{formatDate(a.date)}</p>
               </div>
               <div className="flex flex-shrink-0 items-center gap-1">
-                <a href={`/#/blog/${a.slug}`} onClick={(e) => { e.preventDefault(); window.open(`#/blog/${a.slug}`, '_blank'); }} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-trust-700" title="Aperçu public">
+                <a
+                  href={`/blog/${a.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-trust-700"
+                  title="Voir la page publique"
+                >
                   <Eye className="h-4 w-4" />
                 </a>
                 <button onClick={() => startEdit(a)} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-trust-700" title="Modifier">

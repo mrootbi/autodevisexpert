@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import RecentAnalyses from '../components/RecentAnalyses';
+import { SITE_BASE_URL } from '../lib/siteUrl';
 
 export default function DevisAnalysesIndexPage() {
   return (
@@ -10,6 +11,20 @@ export default function DevisAnalysesIndexPage() {
         description="Consultez les derniers rapports anonymes AutoDevis Expert : comparatif prix garagiste vs prix réel par véhicule."
         canonicalPath="/devis-analyses"
         image="/og-default.png"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: 'Dernières analyses de devis auto — AutoDevis Expert',
+          description:
+            'Rapports anonymes AutoDevis Expert : comparatif prix garagiste vs prix réel par véhicule.',
+          url: `${SITE_BASE_URL}/devis-analyses`,
+          inLanguage: 'fr-FR',
+          isPartOf: {
+            '@type': 'WebSite',
+            name: 'AutoDevis Expert',
+            url: `${SITE_BASE_URL}/`,
+          },
+        }}
       />
       <section className="bg-gradient-to-b from-trust-950 to-trust-900 py-16 text-white">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">

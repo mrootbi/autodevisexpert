@@ -84,7 +84,7 @@ export default function BlogPage() {
               <article>
                 <Link to={`/blog/${featured.slug}`} className="card group mb-8 flex flex-col overflow-hidden md:flex-row">
                   <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-t-2xl md:w-[40%] md:rounded-l-2xl md:rounded-tr-none">
-                    <ArticleCover article={featured} className="absolute inset-0 h-full w-full object-cover" />
+                    <ArticleCover article={featured} className="absolute inset-0 h-full w-full object-cover" priority />
                     <div className="absolute inset-0 bg-gradient-to-t from-trust-950/70 to-transparent" />
                     <span className="absolute bottom-4 left-4 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
                       À la une

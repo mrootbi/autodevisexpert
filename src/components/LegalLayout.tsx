@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import SEO from '../components/SEO';
 import NativeAdCard from '../components/NativeAdCard';
+import { SITE_BASE_URL } from '../lib/siteUrl';
 
 interface LegalLayoutProps {
   title: string;
@@ -13,7 +14,25 @@ interface LegalLayoutProps {
 export default function LegalLayout({ title, description, canonicalPath, lastUpdate, children }: LegalLayoutProps) {
   return (
     <>
-      <SEO title={title} description={description} canonicalPath={canonicalPath} image="/og-default.png" />
+      <SEO
+        title={title}
+        description={description}
+        canonicalPath={canonicalPath}
+        image="/og-default.png"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'WebPage',
+          name: title,
+          description,
+          url: `${SITE_BASE_URL}${canonicalPath}`,
+          inLanguage: 'fr-FR',
+          isPartOf: {
+            '@type': 'WebSite',
+            name: 'AutoDevis Expert',
+            url: `${SITE_BASE_URL}/`,
+          },
+        }}
+      />
       <article className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <header className="border-b border-slate-200 pb-6">
           <p className="text-xs font-semibold uppercase tracking-wider text-trust-600">Page légale</p>

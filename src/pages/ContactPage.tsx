@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Mail, MapPin, Send, CheckCircle2, MessageSquare, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import SEO from '../components/SEO';
 import { submitContactMessage } from '../lib/contactSubmit';
+import { SITE_BASE_URL } from '../lib/siteUrl';
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
@@ -43,6 +44,19 @@ export default function ContactPage() {
         title="Contact"
         description="Contactez AutoDevis Expert pour toute question sur le comparateur de devis, la confidentialité ou le fonctionnement du service."
         canonicalPath="/contact"
+        image="/og-default.png"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'ContactPage',
+          name: 'Contact — AutoDevis Expert',
+          url: `${SITE_BASE_URL}/contact`,
+          inLanguage: 'fr-FR',
+          isPartOf: {
+            '@type': 'WebSite',
+            name: 'AutoDevis Expert',
+            url: `${SITE_BASE_URL}/`,
+          },
+        }}
       />
       <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <header className="text-center">
