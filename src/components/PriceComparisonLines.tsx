@@ -73,6 +73,9 @@ export default function PriceComparisonLines({
       {/* Desktop / tablet table */}
       <div className="hidden overflow-x-auto sm:block">
         <table className="w-full text-left text-sm">
+          <caption className="sr-only">
+            Détails des pièces et réparations du devis — prix garagiste vs prix réel
+          </caption>
           <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
             <tr>
               <th className="px-4 py-3 sm:px-6">Poste</th>

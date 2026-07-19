@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { safeMarkdownUrl } from '../lib/sanitize';
+import { reportMarkdownHeadingComponents } from '../lib/reportMarkdown';
 import { ShieldCheck } from 'lucide-react';
 
 interface RecommendationCardProps {
@@ -191,7 +192,11 @@ export default function RecommendationCard({ recommendation, className = '' }: R
           </>
         ) : (
           <div className="prose-article mt-4 text-sm text-slate-700">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={safeMarkdownUrl}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              urlTransform={safeMarkdownUrl}
+              components={reportMarkdownHeadingComponents}
+            >
               {cleanMarkdownArtifacts(recommendation)}
             </ReactMarkdown>
           </div>

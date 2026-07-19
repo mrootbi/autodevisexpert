@@ -116,6 +116,11 @@ export default function SEO({
     setMeta('name', 'twitter:title', fullTitle);
     setMeta('name', 'twitter:description', metaDescription);
     setMeta('name', 'twitter:image', imageUrl);
+    setMeta('name', 'twitter:url', canonical);
+    setMeta('property', 'twitter:card', 'summary_large_image');
+    setMeta('property', 'twitter:title', fullTitle);
+    setMeta('property', 'twitter:description', metaDescription);
+    setMeta('property', 'twitter:image', imageUrl);
 
     let link = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
     if (!link) {

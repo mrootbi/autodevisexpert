@@ -15,6 +15,7 @@ import { fetchQuoteReportByPathSlug, quoteReportPath } from '../lib/quoteReports
 import { formatEuro } from '../lib/engine';
 import { SITE_BASE_URL } from '../lib/siteUrl';
 import { safeMarkdownUrl } from '../lib/sanitize';
+import { reportMarkdownHeadingComponents, truncateHeading } from '../lib/reportMarkdown';
 
 export default function DevisAnalysisPage() {
   const { pathSlug } = useParams<{ pathSlug: string }>();
@@ -60,18 +61,39 @@ export default function DevisAnalysisPage() {
   const savings = Math.max(0, report.totalGaragiste - report.totalReel);
   const pct =
     report.totalGaragiste > 0 ? Math.round((savings / report.totalGaragiste) * 100) : 0;
-  const h1 = report.title || `Analyse Devis Garage : ${report.marque} ${report.modele}`;
-  const description = `Rapport d'analyse gratuit et avis d'expert mécanicien sur le devis de réparation pour ${report.marque} ${report.modele}.`;
+  const vehicleLabel = `${report.marque} ${report.modele}`.trim();
+  const fullHeadline =
+    report.title || `Analyse Devis Garage : ${vehicleLabel}`;
+  const h1 = truncateHeading(fullHeadline, 70);
+  const description = [
+    `Rapport détaillé et analyse technique du devis pour ${vehicleLabel}`,
+    report.moteur ? `(${report.moteur})` : '',
+    report.kilometrage ? `à ${report.kilometrage} km` : '',
+    `— postes, estimations marché et avis expert AutoDevis.`,
+    savings > 0 ? `Économie indicative estimée : ${formatEuro(savings)}.` : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const seoTitle = truncateHeading(`Analyse devis ${vehicleLabel}`, 55);
   const canonicalPath = quoteReportPath(report);
   const published = report.createdAt;
   const imageUrl = `${SITE_BASE_URL}/og-default.png`;
+  const adviceTitleRaw = (report.expertAdvice.title || '').trim();
+  const adviceTitleNormalized = adviceTitleRaw.toLowerCase();
+  const h1Normalized = fullHeadline.trim().toLowerCase();
+  const expertHeading =
+    !adviceTitleRaw || adviceTitleNormalized === h1Normalized
+      ? `Avis expert mécanicien — ${vehicleLabel}`
+      : `Avis expert : ${truncateHeading(adviceTitleRaw, 80)}`;
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
     <>
       <SEO
-        title={h1}
+        title={seoTitle}
         description={description}
         canonicalPath={canonicalPath}
         image="/og-default.png"
@@ -117,12 +139,15 @@ export default function DevisAnalysisPage() {
             <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-trust-200">
               Rapport anonyme · Programmatic SEO
             </p>
-            <h1 className="mt-2 font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-4xl">
+            <h1
+              className="mt-2 font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-4xl"
+              title={fullHeadline !== h1 ? fullHeadline : undefined}
+            >
               {h1}
             </h1>
             <p className="mt-3 max-w-2xl text-base text-slate-200 sm:text-lg">
-              Comparatif indicatif des postes de réparation : prix annoncé par un garagiste vs estimation
-              du marché français indépendant.
+              Comparatif indicatif des postes de réparation pour {vehicleLabel} : prix annoncé par un
+              garagiste vs estimation du marché français indépendant.
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-white/80 sm:gap-4">
               <span className="flex items-center gap-1">
@@ -153,11 +178,12 @@ export default function DevisAnalysisPage() {
           <section className="card mt-8 overflow-hidden" aria-labelledby="detail-postes-heading">
             <header className="border-b border-slate-200 px-4 py-4 sm:px-6">
               <h2 id="detail-postes-heading" className="font-display text-lg font-bold text-slate-900">
-                Détail des postes
+                Détail des postes — {vehicleLabel}
               </h2>
               <p className="text-sm text-slate-500">
-                {report.marque} {report.modele}
-                {report.version ? ` ${report.version}` : ''}
+                Comparatif ligne à ligne
+                {report.version ? ` · ${report.version}` : ''}
+                {report.moteur ? ` · ${report.moteur}` : ''}
               </p>
             </header>
             <PriceComparisonLines
@@ -173,25 +199,33 @@ export default function DevisAnalysisPage() {
 
           <AdSenseUnit slot="inArticle" placement="preVerdict" className="my-8 rounded-xl" />
 
-          <div className="card p-6 sm:p-8">
+          <section className="card p-6 sm:p-8" aria-labelledby="expert-advice-heading">
             <div className="flex items-center gap-3">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-trust-100">
                 <Lightbulb className="h-5 w-5 text-trust-700" />
               </span>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-trust-600">Avis de l&apos;expert</p>
-                <h2 className="font-display text-xl font-bold text-slate-900">{report.expertAdvice.title}</h2>
+                <p className="text-xs font-semibold uppercase tracking-wider text-trust-600">
+                  Analyse technique AutoDevis
+                </p>
+                <h2 id="expert-advice-heading" className="font-display text-xl font-bold text-slate-900">
+                  {expertHeading}
+                </h2>
               </div>
             </div>
             <div className="prose-article mt-5">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={safeMarkdownUrl}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                urlTransform={safeMarkdownUrl}
+                components={reportMarkdownHeadingComponents}
+              >
                 {report.expertAdvice.body}
               </ReactMarkdown>
             </div>
             {report.expertAdvice.recommendation && (
               <RecommendationCard recommendation={report.expertAdvice.recommendation} />
             )}
-          </div>
+          </section>
 
           <ShareResultButton sharePath={canonicalPath} className="mt-8" />
 
@@ -207,7 +241,8 @@ export default function DevisAnalysisPage() {
 
           <RecentAnalyses
             className="mt-14"
-            title="Rapports récents"
+            title={`Autres analyses proches de ${vehicleLabel}`}
+            subtitle="Rapports anonymes du comparateur — pour comparer d'autres devis similaires."
             excludePathSlug={report.pathSlug}
           />
         </div>
