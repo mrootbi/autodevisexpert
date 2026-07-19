@@ -66,10 +66,11 @@ export default function Footer() {
             <BookOpen className="h-4 w-4" aria-hidden="true" /> Outil & Blog
           </div>
           <ul className="space-y-2 text-sm">
+            <li><Link to="/" className="hover:text-white">Accueil</Link></li>
             <li><Link to="/#outil" className="hover:text-white">Analyser un devis</Link></li>
+            <li><Link to="/devis-analyses" className="hover:text-white">Dernières analyses</Link></li>
             <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
-            <li><Link to="/blog/arnaques-pieces-gonflees" className="hover:text-white">Marges pièces gonflées</Link></li>
-            <li><Link to="/blog/g12-plus-vs-g13-tdi" className="hover:text-white">G12+ vs G13</Link></li>
+            <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
           </ul>
         </div>
 
@@ -81,7 +82,6 @@ export default function Footer() {
             <li><Link to="/mentions-legales" className="hover:text-white">Mentions Légales</Link></li>
             <li><Link to="/politique-de-confidentialite" className="hover:text-white">Politique de Confidentialité</Link></li>
             <li><Link to="/cgu" className="hover:text-white">CGU</Link></li>
-            <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
           </ul>
         </div>
 
