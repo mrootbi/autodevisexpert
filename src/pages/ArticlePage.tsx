@@ -10,6 +10,7 @@ import { useSettings } from '../lib/settingsContext';
 import { canRenderAdSlot } from '../lib/adsConfig';
 import { SITE_BASE_URL } from '../lib/siteUrl';
 import { keywordsToMetaContent, normalizeKeywords } from '../lib/blogKeywords';
+import { truncateHeading } from '../lib/reportMarkdown';
 
 export default function ArticlePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -41,7 +42,9 @@ export default function ArticlePage() {
               </li>
             </ol>
           </nav>
-          <h1 className="font-display text-2xl font-extrabold text-slate-900">Chargement de l&apos;article…</h1>
+          <p className="font-display text-2xl font-extrabold text-slate-900" role="status">
+            Chargement de l&apos;article…
+          </p>
           <p className="mt-3 text-slate-500">Récupération du contenu depuis le serveur.</p>
         </article>
       );
@@ -54,14 +57,19 @@ export default function ArticlePage() {
   const related = articles.filter((a) => a.slug !== article.slug).slice(0, 3);
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-  const metaDescription = truncateMetaDescription(article.excerpt);
+  const metaDescription = truncateMetaDescription(
+    `${article.excerpt} Guide AutoDevis Expert — ${article.category}.`,
+  );
+  const seoTitle = truncateHeading(article.title, 55);
+  const displayH1 = truncateHeading(article.title, 70);
   const articleKeywords = normalizeKeywords(article.keywords);
   const keywordsMeta = keywordsToMetaContent(articleKeywords);
+  const ogImage = article.coverImage || `${SITE_BASE_URL}/og-default.png`;
 
   return (
     <>
       <SEO
-        title={article.title}
+        title={seoTitle}
         description={metaDescription}
         canonicalPath={`/blog/${article.slug}`}
         image={article.coverImage || '/og-default.png'}
@@ -69,7 +77,7 @@ export default function ArticlePage() {
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'BlogPosting',
-          headline: article.title,
+          headline: displayH1,
           datePublished: article.date,
           dateModified: article.date,
           author: { '@type': 'Person', name: article.author },
@@ -77,8 +85,16 @@ export default function ArticlePage() {
           articleSection: article.category,
           keywords: keywordsMeta || undefined,
           inLanguage: 'fr-FR',
-          image: article.coverImage || `${SITE_BASE_URL}/og-default.png`,
+          image: ogImage,
           mainEntityOfPage: `${SITE_BASE_URL}/blog/${article.slug}`,
+          publisher: {
+            '@type': 'Organization',
+            name: 'AutoDevis Expert',
+            logo: {
+              '@type': 'ImageObject',
+              url: `${SITE_BASE_URL}/og-default.png`,
+            },
+          },
         }}
       />
       <article>
@@ -87,7 +103,7 @@ export default function ArticlePage() {
             <ArticleCover
               article={article}
               className="h-full w-full"
-              alt={`Analyse de devis garage gratuit — ${article.title}`}
+              alt={`Couverture article — ${article.title}`}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-trust-950/90 via-trust-900/55 to-trust-800/35" />
           </div>
@@ -111,7 +127,7 @@ export default function ArticlePage() {
                   <ChevronRight className="h-3.5 w-3.5" />
                 </li>
                 <li className="max-w-[14rem] truncate text-white/90 sm:max-w-xs" aria-current="page">
-                  {article.title}
+                  {displayH1}
                 </li>
               </ol>
             </nav>
@@ -124,8 +140,11 @@ export default function ArticlePage() {
             </Link>
 
             <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-white/80">{article.category}</p>
-            <h1 className="mt-2 font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-4xl">
-              {article.title}
+            <h1
+              className="mt-2 font-display text-2xl font-extrabold leading-tight tracking-tight sm:text-4xl"
+              title={article.title !== displayH1 ? article.title : undefined}
+            >
+              {displayH1}
             </h1>
             <p className="mt-3 text-base text-white/90 sm:text-lg">{article.excerpt}</p>
             <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-white/80">
@@ -146,7 +165,7 @@ export default function ArticlePage() {
           <div className={`grid gap-8 ${showSidebarAd ? 'lg:grid-cols-[minmax(0,1fr)_300px]' : ''}`}>
             <div className={`min-w-0 ${showSidebarAd ? 'lg:max-w-3xl' : 'mx-auto max-w-3xl'}`}>
               {/* CMS body + live In-Article ad (gated by adsense_enabled / slot from Supabase) */}
-              <ArticleBodyWithAd content={article.content} />
+              <ArticleBodyWithAd content={article.content} title={article.title} />
 
               <aside className="mt-10 rounded-2xl bg-trust-50 p-5 ring-1 ring-trust-100 sm:p-6">
                 <h2 className="font-display text-lg font-bold text-slate-900">Un devis à analyser ?</h2>

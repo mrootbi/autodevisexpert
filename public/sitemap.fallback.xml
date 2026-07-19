@@ -2,63 +2,135 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.autodevisexpert.com/</loc>
-    <lastmod>2026-07-17</lastmod>
+    <lastmod>2026-07-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://www.autodevisexpert.com/blog</loc>
-    <lastmod>2026-07-17</lastmod>
+    <lastmod>2026-07-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.autodevisexpert.com/contact</loc>
-    <lastmod>2026-07-17</lastmod>
+    <lastmod>2026-07-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://www.autodevisexpert.com/mentions-legales</loc>
-    <lastmod>2026-07-17</lastmod>
+    <lastmod>2026-07-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://www.autodevisexpert.com/politique-de-confidentialite</loc>
-    <lastmod>2026-07-17</lastmod>
+    <lastmod>2026-07-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://www.autodevisexpert.com/cgu</loc>
-    <lastmod>2026-07-17</lastmod>
+    <lastmod>2026-07-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://www.autodevisexpert.com/blog/mazda-3-1-6-hdi-fuite-injecteurs-claquement</loc>
+    <loc>https://www.autodevisexpert.com/blog/changer-courroie-distribution-reperes-joint-spi-tension</loc>
+    <lastmod>2026-07-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.autodevisexpert.com/blog/joint-de-culasse-10-signes-diagnostic-gratuit</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.autodevisexpert.com/blog/moteur-1-6-dci-r9m-renault-problemes-fiabilite</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.autodevisexpert.com/blog/fap-bouche-nettoyage-avant-remplacement-2500-euros</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.autodevisexpert.com/blog/erreur-dsg-position-p-atelier-golf-7-capteur-levier</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.autodevisexpert.com/blog/moteur-1-2-tce-renault-surconsommation-huile-plaintes</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.autodevisexpert.com/blog/adblue-stellantis-peugeot-citroen-reservoir-cristallisation</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.autodevisexpert.com/blog/moteur-1-5-bluehdi-dv5-chaine-arbres-a-cames-casse</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.autodevisexpert.com/blog/moteur-1-2-puretech-problemes-fiabilite-courroie-huile</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.autodevisexpert.com/blog/moteur-1-6-hdi-fuite-aux-injecteurs-et-claquement-moteur-ce-qu-il-faut-verifier</loc>
     <lastmod>2026-07-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.autodevisexpert.com/blog/arnaque-garagiste-signaux-alerte</loc>
-    <lastmod>2026-07-17</lastmod>
+    <lastmod>2026-07-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.autodevisexpert.com/blog/refroidissement-g13-vs-g12-plus</loc>
-    <lastmod>2026-07-17</lastmod>
+    <lastmod>2026-07-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.autodevisexpert.com/blog/devis-concessionnaires-negociation</loc>
-    <lastmod>2026-07-17</lastmod>
+    <lastmod>2026-07-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.autodevisexpert.com/devis-analyses/bmw-x5-van-g05-11-2019-5999a757</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.autodevisexpert.com/devis-analyses/bmw-2-gran-tourer-f46-07-2014-365fc80a</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.autodevisexpert.com/devis-analyses/skoda-octavia-iii-5e3-nl3-nr3-11-2012-03-2021-daffab5e</loc>
+    <lastmod>2026-07-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.autodevisexpert.com/devis-analyses/citroen-berlingo-camionnette-monospace-k9-06-201-bda774a2</loc>

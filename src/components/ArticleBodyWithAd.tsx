@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { sanitizeHtml } from '../lib/sanitize';
+import { prepareArticleHtml } from '../lib/articleHtml';
 import { splitHtmlForInArticleAd } from '../lib/inArticleAd';
 import { useSettings } from '../lib/settingsContext';
 import { canRenderAdSlot } from '../lib/adsConfig';
@@ -7,15 +7,20 @@ import NativeAdCard from './NativeAdCard';
 
 interface ArticleBodyWithAdProps {
   content: string;
+  /** Used as fallback alt text for body images missing alt. */
+  title?: string;
 }
 
 /**
- * Public article body: sanitizes CMS HTML and injects the live In-Article AdSense
- * unit after the 2nd/3rd paragraph when adsense_enabled + slot are configured.
+ * Public article body: sanitizes CMS HTML, demotes body H1s, hardens images,
+ * and injects the live In-Article AdSense unit when configured.
  */
-export default function ArticleBodyWithAd({ content }: ArticleBodyWithAdProps) {
+export default function ArticleBodyWithAd({ content, title }: ArticleBodyWithAdProps) {
   const { adsConfig, loading } = useSettings();
-  const html = useMemo(() => sanitizeHtml(content), [content]);
+  const fallbackAlt = title
+    ? `Illustration — ${title}`
+    : 'Illustration article AutoDevis Expert';
+  const html = useMemo(() => prepareArticleHtml(content, fallbackAlt), [content, fallbackAlt]);
   const parts = useMemo(() => splitHtmlForInArticleAd(html), [html]);
   const showInArticle = !loading && canRenderAdSlot(adsConfig, 'inArticle');
 
@@ -26,7 +31,6 @@ export default function ArticleBodyWithAd({ content }: ArticleBodyWithAdProps) {
           className="prose-article min-w-0 max-w-full overflow-x-clip"
           dangerouslySetInnerHTML={{ __html: html }}
         />
-        {/* Fallback: short articles (<2 paragraphs) still get a post-body unit when ads are on */}
         {showInArticle && <NativeAdCard />}
       </>
     );

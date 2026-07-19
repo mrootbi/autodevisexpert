@@ -54,7 +54,7 @@ export function sanitizeHtml(dirty: string): string {
     USE_PROFILES: { html: true },
     // Keep semantic headings for SEO — never strip h1–h6 from CMS HTML.
     ADD_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
-    ADD_ATTR: ['target', 'width', 'height', 'style', 'class', 'alt'],
+    ADD_ATTR: ['target', 'width', 'height', 'style', 'class', 'alt', 'loading', 'decoding', 'sizes'],
     FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'link', 'meta', 'base'],
     FORBID_ATTR: ['onerror', 'onclick', 'onload', 'onmouseover', 'onfocus', 'onblur'],
     ALLOW_DATA_ATTR: false,
