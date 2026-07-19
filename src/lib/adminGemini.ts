@@ -1,5 +1,4 @@
-import { canAccessGeminiSecrets } from './adminAuth';
-import { supabase } from './supabase';
+import { canAccessGeminiSecrets, getAdminPassword, getAdminToken } from './adminAuth';
 
 /** Exact row key in public.app_settings (not a `settings` table). */
 const GEMINI_SETTING_KEY = 'gemini_api_key';
@@ -70,56 +69,59 @@ function toState(geminiApiKey: string, source?: 'table' | 'edge'): GeminiKeyAdmi
 }
 
 /**
- * Direct read from app_settings — bypasses stuck PostgREST RPC schema cache.
- * Requires RLS policies that allow SELECT on key = 'gemini_api_key'.
+ * `gemini_api_key` is a secret row — RLS denies anon table access to it by design.
+ * Reads/writes go through the password/token-gated `admin-gemini-key` Edge
+ * Function (service_role), never a direct client-side table query.
  */
-async function fetchViaTable(): Promise<GeminiKeyAdminState> {
-  const { data, error } = await supabase
-    .from('app_settings')
-    .select('value')
-    .eq('key', GEMINI_SETTING_KEY)
-    .maybeSingle();
-
-  if (error) {
-    if (/row-level security|rls|42501|permission/i.test(error.message)) {
-      throw new Error(
-        'RLS bloque la lecture de gemini_api_key. Exécutez la migration SQL « allow gemini_api_key table access » dans Supabase.',
-      );
-    }
-    throw new Error(error.message || 'Impossible de charger la clé Gemini.');
-  }
-
-  return toState(String(data?.value ?? ''), 'table');
+function adminSecretHeaders(): HeadersInit {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    apikey: anonKey(),
+    Authorization: `Bearer ${anonKey()}`,
+  };
+  const token = getAdminToken();
+  const password = getAdminPassword();
+  if (token) headers['x-admin-token'] = token;
+  else if (password) headers['x-admin-password'] = password;
+  return headers;
 }
 
-/**
- * Direct upsert into app_settings — no RPC.
- * Payload matches the table: key / value / updated_at.
- */
-async function saveViaTable(cleaned: string): Promise<GeminiKeyAdminState> {
-  const { data, error } = await supabase
-    .from('app_settings')
-    .upsert(
-      {
-        key: GEMINI_SETTING_KEY,
-        value: cleaned,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'key' },
-    )
-    .select('value')
-    .maybeSingle();
+async function readEdgeError(res: Response, fallback: string): Promise<string> {
+  try {
+    const body = (await res.json()) as { error?: string };
+    return body?.error || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
-  if (error) {
-    if (/row-level security|rls|42501|permission/i.test(error.message)) {
-      throw new Error(
-        'RLS bloque l’écriture de gemini_api_key. Exécutez la migration SQL « allow gemini_api_key table access » dans Supabase.',
-      );
-    }
-    throw new Error(error.message || 'Échec de l’enregistrement de la clé Gemini.');
+async function fetchViaEdge(): Promise<GeminiKeyAdminState> {
+  const res = await fetch(`${functionsBase()}/admin-gemini-key`, {
+    method: 'GET',
+    headers: adminSecretHeaders(),
+  });
+
+  if (!res.ok) {
+    throw new Error(await readEdgeError(res, 'Impossible de charger la clé Gemini.'));
   }
 
-  return toState(String(data?.value ?? cleaned), 'table');
+  const data = (await res.json()) as { geminiApiKey?: string };
+  return toState(String(data.geminiApiKey ?? ''), 'edge');
+}
+
+async function saveViaEdge(cleaned: string): Promise<GeminiKeyAdminState> {
+  const res = await fetch(`${functionsBase()}/admin-gemini-key`, {
+    method: 'PUT',
+    headers: adminSecretHeaders(),
+    body: JSON.stringify({ geminiApiKey: cleaned }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await readEdgeError(res, 'Échec de l’enregistrement de la clé Gemini.'));
+  }
+
+  const data = (await res.json()) as { geminiApiKey?: string };
+  return toState(String(data.geminiApiKey ?? cleaned), 'edge');
 }
 
 async function adminFetch(path: string, init: RequestInit = {}): Promise<Response> {
@@ -190,14 +192,14 @@ export async function callGeminiAnalyzeEdge(payload: {
   return { text: data.text, model: data.model };
 }
 
-/** Load Gemini API key(s) via direct app_settings select (admin UI gate only). */
+/** Load Gemini API key(s) via the password-gated Edge Function (admin UI gate only). */
 export async function fetchGeminiApiKeyAdmin(): Promise<GeminiKeyAdminState> {
   const empty = toState('');
   if (!canAccessGeminiSecrets()) return empty;
-  return fetchViaTable();
+  return fetchViaEdge();
 }
 
-/** Persist gemini_api_key via direct app_settings upsert (bypasses RPC schema cache). */
+/** Persist gemini_api_key via the password-gated Edge Function (service_role). */
 export async function saveGeminiApiKeyAdmin(geminiApiKey: string): Promise<GeminiKeyAdminState> {
   if (!canAccessGeminiSecrets()) {
     throw new Error('Session admin absente — reconnectez-vous pour enregistrer les clés.');
@@ -208,7 +210,7 @@ export async function saveGeminiApiKeyAdmin(geminiApiKey: string): Promise<Gemin
     throw new Error('Format invalide : chaque clé doit faire au moins 20 caractères.');
   }
 
-  return saveViaTable(cleaned);
+  return saveViaEdge(cleaned);
 }
 
 /** @deprecated Kept for call sites that still import Edge helpers — unused by admin save. */

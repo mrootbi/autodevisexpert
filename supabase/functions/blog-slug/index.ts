@@ -14,6 +14,38 @@ const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+/** Abuse / cost protection — per-IP sliding window (in-memory, per isolate). */
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 10;
+const rateBuckets = new Map<string, number[]>();
+
+function clientIp(req: Request): string {
+  const forwarded = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  const realIp = req.headers.get('x-real-ip')?.trim();
+  const cf = req.headers.get('cf-connecting-ip')?.trim();
+  return cf || realIp || forwarded || 'unknown';
+}
+
+function allowRequest(ip: string): boolean {
+  const now = Date.now();
+  const prev = rateBuckets.get(ip) ?? [];
+  const inWindow = prev.filter((t) => now - t < RATE_WINDOW_MS);
+  if (inWindow.length >= RATE_MAX) {
+    rateBuckets.set(ip, inWindow);
+    return false;
+  }
+  inWindow.push(now);
+  rateBuckets.set(ip, inWindow);
+  if (rateBuckets.size > 5_000) {
+    for (const [key, bucket] of rateBuckets) {
+      const kept = bucket.filter((t) => now - t < RATE_WINDOW_MS);
+      if (kept.length === 0) rateBuckets.delete(key);
+      else rateBuckets.set(key, kept);
+    }
+  }
+  return true;
+}
+
 const SYSTEM_PROMPT =
   "Tu es un expert SEO français. À partir du titre fourni, génère UNIQUEMENT un slug URL optimisé : minuscules, sans accents, mots séparés par des tirets, sans slash ni ponctuation, maximum 80 caractères. Réponds avec le slug seul — aucun texte, aucune guillemet, aucun markdown.";
 
@@ -47,6 +79,10 @@ function parseKeys(raw: string): string[] {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json(405, { error: 'Method not allowed' });
+
+  if (!allowRequest(clientIp(req))) {
+    return json(429, { error: 'Trop de requêtes. Réessayez dans une minute.', code: 'CLIENT_RATE_LIMITED' });
+  }
 
   let title = '';
   try {

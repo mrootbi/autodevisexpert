@@ -34,6 +34,9 @@ export default function RecentAnalyses({
           : list.slice(0, limit);
         setReports(filtered);
       })
+      .catch((err) => {
+        console.warn('Failed to fetch recent quote reports', err);
+      })
       .finally(() => {
         if (mounted) setLoading(false);
       });

@@ -174,10 +174,12 @@ export default function DevisTool() {
       setResult(res);
       setHighDemandOpen(false);
       setAllKeysBlocked(false);
-      void logDevis(res);
-      void saveQuoteReport(res).then((report) => {
-        if (report) setPublicReportPath(quoteReportPath(report));
-      });
+      logDevis(res).catch((err) => console.warn('Failed to log devis analytics', err));
+      saveQuoteReport(res)
+        .then((report) => {
+          if (report) setPublicReportPath(quoteReportPath(report));
+        })
+        .catch((err) => console.warn('Failed to save public quote report', err));
     } catch (err) {
       if (isAllKeysBlockedError(err)) {
         setError(null);

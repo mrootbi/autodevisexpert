@@ -14,6 +14,38 @@ const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+/** Abuse / cost protection — per-IP sliding window (in-memory, per isolate). */
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX = 10;
+const rateBuckets = new Map<string, number[]>();
+
+function clientIp(req: Request): string {
+  const forwarded = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  const realIp = req.headers.get('x-real-ip')?.trim();
+  const cf = req.headers.get('cf-connecting-ip')?.trim();
+  return cf || realIp || forwarded || 'unknown';
+}
+
+function allowRequest(ip: string): boolean {
+  const now = Date.now();
+  const prev = rateBuckets.get(ip) ?? [];
+  const inWindow = prev.filter((t) => now - t < RATE_WINDOW_MS);
+  if (inWindow.length >= RATE_MAX) {
+    rateBuckets.set(ip, inWindow);
+    return false;
+  }
+  inWindow.push(now);
+  rateBuckets.set(ip, inWindow);
+  if (rateBuckets.size > 5_000) {
+    for (const [key, bucket] of rateBuckets) {
+      const kept = bucket.filter((t) => now - t < RATE_WINDOW_MS);
+      if (kept.length === 0) rateBuckets.delete(key);
+      else rateBuckets.set(key, kept);
+    }
+  }
+  return true;
+}
+
 const SYSTEM_PROMPT = `Tu es un expert SEO automobile français (search intent, longue traîne, Google FR).
 À partir du titre et du contenu d'un article de blog, génère 5 à 8 mots-clés SEO à fort volume / intention commerciale ou informationnelle, en français.
 Exemples de style: "devis climatisation", "compresseur HS", "prix recharge clim", "skoda octavia".
@@ -68,6 +100,10 @@ function parseKeywordList(raw: string): string[] {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json(405, { error: 'Method not allowed' });
+
+  if (!allowRequest(clientIp(req))) {
+    return json(429, { error: 'Trop de requêtes. Réessayez dans une minute.', code: 'CLIENT_RATE_LIMITED' });
+  }
 
   let title = '';
   let excerpt = '';

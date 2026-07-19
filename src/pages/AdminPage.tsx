@@ -167,9 +167,11 @@ function Overview({ onJump }: { onJump: (t: Tab) => void }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetchDevisHistory().then((rows) => {
-      if (!cancelled) setHistory(rows);
-    });
+    fetchDevisHistory()
+      .then((rows) => {
+        if (!cancelled) setHistory(rows);
+      })
+      .catch((err) => console.warn('Failed to fetch devis history', err));
     setBlogCount(getBlogArticles().length);
     void refreshGeminiApiKey();
     return () => {

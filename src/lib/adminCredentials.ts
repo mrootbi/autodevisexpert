@@ -45,29 +45,28 @@ export async function fetchAdminUsername(): Promise<string> {
     throw new Error('Session admin incomplete — reconnectez-vous.');
   }
 
-  // Prefer direct table read (avoids PostgREST RPC cache issues).
-  try {
-    const rows = await fetchCredentialRows();
-    return rows.username;
-  } catch (tableErr) {
-    // Fallback RPC if table policies are not applied yet.
-    const password = getAdminPassword();
-    if (!password) throw tableErr;
-
+  // Prefer the password-gated RPC (works regardless of table RLS, which
+  // intentionally denies direct anon access to secret rows like this one).
+  const password = getAdminPassword();
+  if (password) {
     const { data, error } = await supabase.rpc('admin_get_username', {
       p_password: password,
     });
 
-    if (error) {
-      if (isSchemaCacheError(error.message)) throw tableErr;
-      if (/unauthorized|42501/i.test(error.message)) {
-        throw new Error('Session expirée — reconnectez-vous.');
-      }
+    if (!error) return String(data ?? 'admin');
+
+    if (/unauthorized|42501/i.test(error.message) && !isSchemaCacheError(error.message)) {
+      throw new Error('Session expirée — reconnectez-vous.');
+    }
+    if (!isSchemaCacheError(error.message)) {
       throw new Error(error.message || 'Impossible de charger le nom d’utilisateur.');
     }
-
-    return String(data ?? 'admin');
+    // else: RPC schema cache stale — fall through to the table read below.
   }
+
+  // Fallback only for the (rare) stuck PostgREST schema-cache case.
+  const rows = await fetchCredentialRows();
+  return rows.username;
 }
 
 export async function saveAdminCredentials(opts: {

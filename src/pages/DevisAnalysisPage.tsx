@@ -43,6 +43,13 @@ export default function DevisAnalysisPage() {
           setNotFound(false);
         }
       })
+      .catch((err) => {
+        console.warn('Failed to fetch quote report', err);
+        if (mounted) {
+          setNotFound(true);
+          setReport(null);
+        }
+      })
       .finally(() => {
         if (mounted) setLoading(false);
       });

@@ -16,6 +16,38 @@ const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
 };
 
+/** Brute-force protection — per-IP sliding window (in-memory, per isolate). */
+const RATE_WINDOW_MS = 5 * 60_000;
+const RATE_MAX_ATTEMPTS = 15;
+const rateBuckets = new Map<string, number[]>();
+
+function clientIp(req: Request): string {
+  const forwarded = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  const realIp = req.headers.get('x-real-ip')?.trim();
+  const cf = req.headers.get('cf-connecting-ip')?.trim();
+  return cf || realIp || forwarded || 'unknown';
+}
+
+function allowAttempt(ip: string): boolean {
+  const now = Date.now();
+  const prev = rateBuckets.get(ip) ?? [];
+  const inWindow = prev.filter((t) => now - t < RATE_WINDOW_MS);
+  if (inWindow.length >= RATE_MAX_ATTEMPTS) {
+    rateBuckets.set(ip, inWindow);
+    return false;
+  }
+  inWindow.push(now);
+  rateBuckets.set(ip, inWindow);
+  if (rateBuckets.size > 5_000) {
+    for (const [key, bucket] of rateBuckets) {
+      const kept = bucket.filter((t) => now - t < RATE_WINDOW_MS);
+      if (kept.length === 0) rateBuckets.delete(key);
+      else rateBuckets.set(key, kept);
+    }
+  }
+  return true;
+}
+
 function json(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -92,10 +124,10 @@ async function authorize(req: Request): Promise<boolean> {
       .eq('key', 'admin_panel_password')
       .maybeSingle();
     const dbPass = String(data?.value ?? '');
+    // No password configured / reachable → deny rather than accept a guessable default.
     if (dbPass && password === dbPass) return true;
-    if (!dbPass && password === 'password123') return true;
   } catch {
-    return password === 'password123';
+    return false;
   }
 
   return false;
@@ -103,6 +135,11 @@ async function authorize(req: Request): Promise<boolean> {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  const ip = clientIp(req);
+  if (!allowAttempt(ip)) {
+    return json(429, { error: 'Trop de tentatives. Réessayez dans quelques minutes.' });
+  }
 
   if (!(await authorize(req))) {
     return json(401, { error: 'Admin non authentifié' });
